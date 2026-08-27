@@ -53,17 +53,36 @@ day-by-day stops take up to three. Both render into the PDF — one photo become
 wide banner, two or more lay out in a grid three to a row, and captions sit
 underneath.
 
-**Load sample itinerary** comes with real photographs of the places in the trip —
-Tegallalang, Tegenungan Waterfall, Uluwatu and the Kecak dance — served from
-`public/sample/`. Every one is CC0 or public domain; sources are recorded in
-`public/sample/CREDITS.md`. Delete that folder if you do not want it and the
-sample simply loads without pictures.
+A single photo runs the full width when it is landscape and takes half the width
+when it is portrait, so a tall picture is not cropped into a letterbox strip.
 
 Uploads never reach state at full size. `lib/image.ts` decodes each file (applying
 EXIF orientation), downscales the longest edge to 1100px, flattens onto white and
 re-encodes as a JPEG data URL. That keeps the PDF small and the session draft
 inside the browser's storage quota. If the quota is exceeded anyway you get a
 warning: the itinerary is still intact in the tab, but a refresh would lose it.
+
+## Sample itineraries
+
+**Load sample itinerary** offers two fully populated demos, both with real
+photographs of the places involved:
+
+| Sample | Shape |
+| --- | --- |
+| India family tour | 10 days, 5 states — Delhi, Uttar Pradesh, Rajasthan, Punjab, Uttarakhand — for 4 adults and 3 children, in INR. Three flight sectors, five hotels, an overnight train, and child-aware ticketing (ASI monuments are free under 15, so those activities are costed for the adults only). |
+| Bali escape | 6 days international for 2 adults — the smaller, simpler case. |
+
+Photos live in `public/sample/` and `public/sample/india/`. Every one is CC0 or
+public domain; sources are listed in `public/sample/CREDITS.md`. Delete a folder
+and that sample simply loads without pictures.
+
+The Amritsar activity deliberately ships without a photo — no modern image of the
+Golden Temple on Wikimedia Commons is CC0 or public domain, and the ShareAlike
+alternatives carry attribution duties best kept out of a document you send to
+clients.
+
+Samples are registered in [`src/lib/samples/index.ts`](src/lib/samples/index.ts);
+add another by writing a builder and listing it there.
 
 ## How the pricing is calculated
 
@@ -103,7 +122,7 @@ src/
     document-model.ts   one presentation-ready view both renderers read
     color.ts            brand-colour tints (the PDF has no color-mix())
     image.ts            upload decode, downscale and re-encode
-    sample.ts           the demo itinerary
+    samples/            the demo itineraries and their photo manifests
   store/
     itinerary-store.tsx  useReducer + context; ~40 typed actions
   components/

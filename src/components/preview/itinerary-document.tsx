@@ -913,7 +913,15 @@ function PhotoGrid({
   captions?: boolean;
 }) {
   if (!images.length) return null;
-  const cols = Math.min(3, images.length);
+
+  // Mirrors the PDF: a lone portrait photo takes half the width rather than
+  // being cropped into a full-bleed letterbox.
+  const solo = images.length === 1 ? images[0] : null;
+  const soloPortrait =
+    solo !== null && solo.height > 0 && solo.height > solo.width * 1.05;
+  const cols = soloPortrait ? 2 : Math.min(3, images.length);
+  const cellHeight = soloPortrait ? Math.round(height * 1.5) : height;
+
   return (
     <div
       className="doc-photos"
@@ -922,7 +930,7 @@ function PhotoGrid({
       {images.map((img) => (
         <figure key={img.id} className="doc-photo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={img.dataUrl} alt={img.caption || ""} style={{ height }} />
+          <img src={img.dataUrl} alt={img.caption || ""} style={{ height: cellHeight }} />
           {captions && img.caption.trim() ? (
             <figcaption>{img.caption.trim()}</figcaption>
           ) : null}

@@ -6,10 +6,10 @@ import {
   makeHotel,
   makeItinerary,
   makeLineItem,
-  uid,
-} from "./defaults";
-import { addDays, toISODate } from "./format";
-import type { Itinerary, ItineraryImage } from "./types";
+} from "@/lib/defaults";
+import { addDays, toISODate } from "@/lib/format";
+import type { Itinerary } from "@/lib/types";
+import type { SamplePhoto } from "./shared";
 
 /**
  * Fixed ids for the entities that carry sample photos, so the photos attach to
@@ -22,8 +22,8 @@ const SAMPLE_IDS = {
   beachSunset: "sample_itm_beach_sunset",
 } as const;
 
-/** A fully populated itinerary used by the “Load sample” action. */
-export function makeSampleItinerary(): Itinerary {
+/** A six-day international trip for two: Bali, in INR. */
+export function makeBaliSample(): Itinerary {
   const base = makeItinerary();
   const start = addDays(toISODate(new Date()), 21);
   const d = (n: number) => addDays(start, n);
@@ -410,19 +410,9 @@ export function makeSampleItinerary(): Itinerary {
 }
 
 
-/* ----------------------------------------------------------- sample photos */
 
-interface SamplePhoto {
-  target: string;
-  file: string;
-  caption: string;
-}
-
-/**
- * Real photographs of the places in the sample trip, served from
- * `public/sample/`. All CC0 or public domain — see `public/sample/CREDITS.md`.
- */
-const SAMPLE_PHOTOS: SamplePhoto[] = [
+/** CC0 / public-domain photographs — see `public/sample/CREDITS.md`. */
+export const BALI_PHOTOS: SamplePhoto[] = [
   {
     target: SAMPLE_IDS.terraces,
     file: "/sample/tegallalang.jpg",
@@ -459,75 +449,3 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
     caption: "",
   },
 ];
-
-/**
- * Loads a bundled photo as an `ItineraryImage`. The files are already sized and
- * compressed for the document, so they are embedded as-is rather than being put
- * back through the upload pipeline — that would re-encode an already-lossy JPEG
- * for no benefit.
- */
-async function loadSamplePhoto(spec: SamplePhoto): Promise<ItineraryImage | null> {
-  try {
-    const res = await fetch(spec.file);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error("unreadable"));
-      reader.readAsDataURL(blob);
-    });
-
-    const size = await new Promise<{ width: number; height: number }>((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-      img.onerror = () => resolve({ width: 0, height: 0 });
-      img.src = dataUrl;
-    });
-
-    return {
-      id: uid("img"),
-      dataUrl,
-      name: spec.file.split("/").pop() ?? "photo.jpg",
-      caption: spec.caption,
-      ...size,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Returns the sample itinerary with its photos attached. Any photo that fails to
- * load is skipped, so the sample still works offline or with `public/sample/`
- * deleted — it simply arrives without pictures.
- */
-export async function attachSamplePhotos(itinerary: Itinerary): Promise<Itinerary> {
-  const loaded = await Promise.all(
-    SAMPLE_PHOTOS.map(async (spec) => ({
-      target: spec.target,
-      image: await loadSamplePhoto(spec),
-    }))
-  );
-
-  const byTarget = new Map<string, ItineraryImage[]>();
-  for (const { target, image } of loaded) {
-    if (!image) continue;
-    byTarget.set(target, [...(byTarget.get(target) ?? []), image]);
-  }
-  if (byTarget.size === 0) return itinerary;
-
-  return {
-    ...itinerary,
-    activities: itinerary.activities.map((a) =>
-      byTarget.has(a.id) ? { ...a, images: byTarget.get(a.id)! } : a
-    ),
-    days: itinerary.days.map((d) => ({
-      ...d,
-      items: d.items.map((i) =>
-        byTarget.has(i.id) ? { ...i, images: byTarget.get(i.id)! } : i
-      ),
-    })),
-  };
-}

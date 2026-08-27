@@ -30,6 +30,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,7 +41,7 @@ import { PrintRoot } from "@/components/preview/preview-panel";
 import { downloadBlob, generatePdfBlob, pdfFileName } from "@/components/pdf/generate-pdf";
 import { BRAND } from "@/lib/brand";
 import { buildDocModel } from "@/lib/document-model";
-import { attachSamplePhotos, makeSampleItinerary } from "@/lib/sample";
+import { SAMPLES, withSamplePhotos, type SampleDefinition } from "@/lib/samples";
 import { countBy } from "@/lib/validation";
 import { clearStoredDraft, useItinerary } from "@/store/itinerary-store";
 import type { SectionKey, ValidationIssue } from "@/lib/types";
@@ -158,15 +161,15 @@ export function Toolbar({
     toast.success("Everything cleared.");
   };
 
-  const loadSample = async () => {
+  const loadSample = async (sample: SampleDefinition) => {
     // Show the itinerary straight away, then fold in the photos once the
     // bundled files have loaded — they are the slow part.
-    const sample = makeSampleItinerary();
-    dispatch({ type: "load", itinerary: sample });
-    toast.success("Sample itinerary loaded.");
+    const itinerary = sample.build();
+    dispatch({ type: "load", itinerary });
+    toast.success(`${sample.label} sample loaded.`);
     try {
-      const withPhotos = await attachSamplePhotos(sample);
-      if (withPhotos !== sample) {
+      const withPhotos = await withSamplePhotos(sample, itinerary);
+      if (withPhotos !== itinerary) {
         dispatch({ type: "load", itinerary: withPhotos });
       }
     } catch {
@@ -276,10 +279,26 @@ export function Toolbar({
                   <Printer className="size-4" />
                   Print itinerary
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void loadSample()}>
-                  <Sparkles className="size-4" />
-                  Load sample itinerary
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Sparkles className="size-4" />
+                    Load sample itinerary
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    {SAMPLES.map((sample) => (
+                      <DropdownMenuItem
+                        key={sample.id}
+                        className="flex-col items-start gap-0.5"
+                        onSelect={() => void loadSample(sample)}
+                      >
+                        <span>{sample.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {sample.description}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setConfirm("new")}>
                   <FilePlus2 className="size-4" />
