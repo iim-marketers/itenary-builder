@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -38,10 +39,18 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { PrintRoot } from "@/components/preview/preview-panel";
-import { downloadBlob, generatePdfBlob, pdfFileName } from "@/components/pdf/generate-pdf";
+import {
+  downloadBlob,
+  generatePdfBlob,
+  pdfFileName,
+} from "@/components/pdf/generate-pdf";
 import { BRAND } from "@/lib/brand";
 import { buildDocModel } from "@/lib/document-model";
-import { SAMPLES, withSamplePhotos, type SampleDefinition } from "@/lib/samples";
+import {
+  SAMPLES,
+  withSamplePhotos,
+  type SampleDefinition,
+} from "@/lib/samples";
 import { countBy } from "@/lib/validation";
 import { clearStoredDraft, useItinerary } from "@/store/itinerary-store";
 import type { SectionKey, ValidationIssue } from "@/lib/types";
@@ -84,7 +93,7 @@ export function Toolbar({
     window.addEventListener("afterprint", done);
     // Two frames so the off-screen copy is laid out before the dialog opens.
     const raf = requestAnimationFrame(() =>
-      requestAnimationFrame(() => window.print())
+      requestAnimationFrame(() => window.print()),
     );
     return () => {
       cancelAnimationFrame(raf);
@@ -98,7 +107,7 @@ export function Toolbar({
     if (errors > 0) {
       setIssuesOpen(true);
       toast.error(
-        `Fix ${errors} required ${errors === 1 ? "field" : "fields"} before exporting.`
+        `Fix ${errors} required ${errors === 1 ? "field" : "fields"} before exporting.`,
       );
       return false;
     }
@@ -116,7 +125,9 @@ export function Toolbar({
       });
     } catch (err) {
       console.error(err);
-      toast.error("The PDF could not be generated. Check the console for details.");
+      toast.error(
+        "The PDF could not be generated. Check the console for details.",
+      );
     } finally {
       setBusy(null);
     }
@@ -131,7 +142,9 @@ export function Toolbar({
       toast.success("PDF downloaded.");
     } catch (err) {
       console.error(err);
-      toast.error("The PDF could not be generated. Check the console for details.");
+      toast.error(
+        "The PDF could not be generated. Check the console for details.",
+      );
     } finally {
       setBusy(null);
     }
@@ -141,7 +154,7 @@ export function Toolbar({
     () => () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     },
-    [pdfUrl]
+    [pdfUrl],
   );
 
   /* ------------------------------------------------------------ resets */
@@ -182,9 +195,14 @@ export function Toolbar({
       <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex max-w-[110rem] flex-wrap items-center gap-3 px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <FileText className="size-4" />
-            </span>
+            <Image
+              src="/logo/travelmaxx-mark.png"
+              alt=""
+              width={64}
+              height={64}
+              priority
+              className="size-8 shrink-0 object-contain"
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold leading-tight">
                 {BRAND.name}
@@ -200,7 +218,7 @@ export function Toolbar({
             size="sm"
             className={cn(
               "ml-auto h-8 gap-1.5",
-              errors > 0 && "text-destructive hover:text-destructive"
+              errors > 0 && "text-destructive hover:text-destructive",
             )}
             onClick={() => setIssuesOpen(true)}
           >
@@ -383,7 +401,9 @@ export function Toolbar({
             <DialogDescription>
               {errors > 0
                 ? `${errors} required ${errors === 1 ? "item" : "items"}${
-                    warnings > 0 ? ` and ${warnings} suggestion${warnings === 1 ? "" : "s"}` : ""
+                    warnings > 0
+                      ? ` and ${warnings} suggestion${warnings === 1 ? "" : "s"}`
+                      : ""
                   }.`
                 : warnings > 0
                   ? `Everything required is filled in. ${warnings} optional suggestion${
@@ -429,14 +449,14 @@ export function Toolbar({
                                 "mt-1.5 size-1.5 shrink-0 rounded-full",
                                 issue.level === "error"
                                   ? "bg-destructive"
-                                  : "bg-amber-500"
+                                  : "bg-amber-500",
                               )}
                             />
                             <span
                               className={cn(
                                 issue.level === "error"
                                   ? "text-foreground"
-                                  : "text-muted-foreground"
+                                  : "text-muted-foreground",
                               )}
                             >
                               {issue.message}
@@ -460,16 +480,21 @@ export function Toolbar({
       </Dialog>
 
       {/* -------------------------------------------------------- confirm */}
-      <Dialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
+      <Dialog
+        open={confirm !== null}
+        onOpenChange={(o) => !o && setConfirm(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {confirm === "new" ? "Start a new itinerary?" : "Clear everything?"}
+              {confirm === "new"
+                ? "Start a new itinerary?"
+                : "Clear everything?"}
             </DialogTitle>
             <DialogDescription>
               Nothing is stored on a server — this itinerary exists only in this
-              browser session and will be permanently discarded. Download the PDF
-              first if you still need it.
+              browser session and will be permanently discarded. Download the
+              PDF first if you still need it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
