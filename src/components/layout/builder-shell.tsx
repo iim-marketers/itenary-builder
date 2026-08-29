@@ -55,6 +55,7 @@ export function BuilderShell() {
   const { itinerary, hydrated } = useItinerary();
   const [tab, setTab] = React.useState<SectionKey>("trip");
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [previewDocked, setPreviewDocked] = React.useState(false);
 
   const issues = React.useMemo(() => validateItinerary(itinerary), [itinerary]);
   const doc = React.useMemo(() => buildDocModel(itinerary), [itinerary]);
@@ -67,6 +68,16 @@ export function BuilderShell() {
     }
     return map;
   }, [issues]);
+
+  // Wide screens dock the preview beside the forms; anything narrower has no
+  // room for it, so the same button slides it in as an overlay instead.
+  const togglePreview = () => {
+    if (window.matchMedia("(min-width: 80rem)").matches) {
+      setPreviewDocked((open) => !open);
+    } else {
+      setPreviewOpen(true);
+    }
+  };
 
   const jump = (section: SectionKey) => {
     setTab(section);
@@ -87,11 +98,18 @@ export function BuilderShell() {
       <Toolbar
         issues={issues}
         onJumpToSection={jump}
-        onOpenPreview={() => setPreviewOpen(true)}
+        previewDocked={previewDocked}
+        onTogglePreview={togglePreview}
       />
 
       <main className="mx-auto max-w-[110rem] px-4 py-4">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_30rem] 2xl:grid-cols-[minmax(0,1fr)_34rem]">
+        <div
+          className={cn(
+            "grid gap-5",
+            previewDocked &&
+              "xl:grid-cols-[minmax(0,1fr)_30rem] 2xl:grid-cols-[minmax(0,1fr)_34rem]",
+          )}
+        >
           {/* ------------------------------------------------------ forms */}
           <Tabs
             value={tab}
@@ -145,7 +163,7 @@ export function BuilderShell() {
           </Tabs>
 
           {/* ---------------------------------------------------- preview */}
-          <aside className="hidden xl:block">
+          <aside className={cn("hidden", previewDocked && "xl:block")}>
             <div className="sticky top-17">
               <PreviewHeader doc={doc} />
               <Card className="overflow-hidden p-0">

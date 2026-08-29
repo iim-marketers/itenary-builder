@@ -69,11 +69,13 @@ const SECTION_LABEL: Record<SectionKey, string> = {
 export function Toolbar({
   issues,
   onJumpToSection,
-  onOpenPreview,
+  previewDocked,
+  onTogglePreview,
 }: {
   issues: ValidationIssue[];
   onJumpToSection: (section: SectionKey) => void;
-  onOpenPreview: () => void;
+  previewDocked: boolean;
+  onTogglePreview: () => void;
 }) {
   const { itinerary, dispatch } = useItinerary();
   const doc = React.useMemo(() => buildDocModel(itinerary), [itinerary]);
@@ -247,8 +249,14 @@ export function Toolbar({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 xl:hidden"
-              onClick={onOpenPreview}
+              // The pressed styling only makes sense from `xl` up, where the
+              // button toggles the docked panel rather than opening a sheet.
+              className={cn(
+                "h-8",
+                previewDocked && "xl:bg-accent xl:text-accent-foreground",
+              )}
+              onClick={onTogglePreview}
+              aria-pressed={previewDocked}
               aria-label="Live preview"
             >
               <Eye className="size-4" />
