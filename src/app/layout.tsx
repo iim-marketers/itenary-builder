@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "TravelMaxx — Itinerary builder & PDF generator",
   description:
-    "Build a complete travel itinerary and export a print-ready PDF. Everything stays in your browser — no database, no account.",
+    "Build a complete travel itinerary and export a print-ready PDF.",
 };
 
 export const viewport: Viewport = {
