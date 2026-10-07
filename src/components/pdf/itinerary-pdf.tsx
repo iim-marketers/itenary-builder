@@ -85,7 +85,7 @@ const SP = {
  * their own underline and stacks captions over display figures.
  */
 const LH = {
-  display: 1.1,
+  display: 1.25,
   heading: 1.2,
   label: 1.35,
   body: 1.45,
@@ -139,6 +139,8 @@ function makeStyles(brandRaw: string) {
         justifyContent: "space-between",
         alignItems: "flex-start",
       },
+      coverBrand: { flexDirection: "row", alignItems: "center", gap: SP.md },
+      coverBrandMark: { width: 40, height: 40, objectFit: "contain" },
       coverLogo: { maxHeight: 42, maxWidth: 150, objectFit: "contain" },
       coverMark: { fontSize: 15, fontWeight: 600, color: onBrand, lineHeight: LH.heading },
       coverTagline: {
@@ -243,6 +245,7 @@ function makeStyles(brandRaw: string) {
         paddingBottom: SP.md,
         marginBottom: SP.xl,
       },
+      sectionHeadGap: { marginTop: 36 },
       // Playfair has deep descenders — the extra bottom padding above keeps the
       // rule clear of them.
       h2: {
@@ -558,13 +561,19 @@ function SectionHead({
   num,
   title,
   st,
+  first,
 }: {
   num: string;
   title: string;
   st: Styles;
+  first?: boolean;
 }) {
   return (
-    <View style={st.s.sectionHead}>
+    <View
+      style={[st.s.sectionHead, first ? undefined : st.s.sectionHeadGap]}
+      wrap={false}
+      minPresenceAhead={120}
+    >
       <Text style={st.s.h2}>{title}</Text>
       <Text style={st.s.sectionNum}>Section {num}</Text>
     </View>
@@ -680,16 +689,22 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
       {/* ------------------------------------------------------- cover */}
       <Page size="A4" style={s.coverPage}>
         <View style={s.coverBand}>
-          <View>
-            {doc.logo ? (
+          <View style={s.coverBrand}>
+            {doc.mark && !doc.logo ? (
               /* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an <img> */
-              <Image src={doc.logo} style={s.coverLogo} />
-            ) : (
-              <Text style={s.coverMark}>{doc.companyName}</Text>
-            )}
-            {doc.tagline ? (
-              <Text style={[s.coverTagline, { marginTop: SP.xs }]}>{doc.tagline}</Text>
+              <Image src={doc.mark} style={s.coverBrandMark} />
             ) : null}
+            <View>
+              {doc.logo ? (
+                /* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an <img> */
+                <Image src={doc.logo} style={s.coverLogo} />
+              ) : (
+                <Text style={s.coverMark}>{doc.companyName}</Text>
+              )}
+              {doc.tagline ? (
+                <Text style={[s.coverTagline, { marginTop: SP.xs }]}>{doc.tagline}</Text>
+              ) : null}
+            </View>
           </View>
           <View>
             {doc.reference ? (
@@ -795,7 +810,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
               </Text>
               {doc.showPerPerson ? (
                 <Text
-                  style={{ fontSize: 8.5, color: MUTED, lineHeight: LH.label }}
+                  style={{
+                    fontSize: 8.5,
+                    color: MUTED,
+                    lineHeight: LH.label,
+                    marginTop: SP.xxs,
+                  }}
                 >
                   {money(p.perPerson)} per person
                 </Text>
@@ -823,7 +843,7 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
       {/* ----------------------------------------------------- summary */}
       <Page size="A4" style={s.page}>
         <Furniture doc={doc} st={st} />
-        <SectionHead num={sec("Summary")} title="Trip summary" st={st} />
+        <SectionHead num={sec("Summary")} title="Trip summary" st={st} first />
 
         <View style={[s.row, { gap: SP.md }]}>
           <View style={[s.card, s.cardAccent, { flex: 1 }]}>
@@ -867,7 +887,7 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
 
         {doc.overview ? (
           <View style={{ marginTop: SP.xl }}>
-            <Text style={s.blockLabel}>About {doc.destination}</Text>
+            <Text style={s.blockLabel} minPresenceAhead={40}>About {doc.destination}</Text>
             <Text style={s.lead}>{doc.overview}</Text>
           </View>
         ) : null}
@@ -925,12 +945,10 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
             Prepared by {doc.preparedBy}
           </Text>
         ) : null}
-      </Page>
 
       {/* ----------------------------------------------------- flights */}
       {doc.flights.length ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead num={sec("Flights")} title="Flight details" st={st} />
 
           <View style={s.cardStack}>
@@ -1070,13 +1088,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
             </View>
           ))}
           </View>
-        </Page>
+        </>
       ) : null}
 
       {/* ------------------------------------------------------ hotels */}
       {doc.hotels.length ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead num={sec("Hotels")} title="Accommodation" st={st} />
 
           <View style={s.cardStack}>
@@ -1175,13 +1192,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
             </View>
           ))}
           </View>
-        </Page>
+        </>
       ) : null}
 
       {/* -------------------------------------------------- activities */}
       {doc.activities.length ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead
             num={sec("Experiences")}
             title="Sightseeing & activities"
@@ -1291,13 +1307,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
             </View>
           ))}
           </View>
-        </Page>
+        </>
       ) : null}
 
       {/* ---------------------------------------------------------- days */}
       {doc.days.length ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead num={sec("Itinerary")} title="Day-by-day itinerary" st={st} />
 
           <View style={{ flexDirection: "column", gap: SP.xxl + SP.md }}>
@@ -1316,6 +1331,8 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
                         style={{
                           fontSize: 5.8,
                           letterSpacing: 1.2,
+                          paddingLeft: 1.2,
+                          lineHeight: 1,
                           color: st.onBrand,
                           textTransform: "uppercase",
                         }}
@@ -1323,7 +1340,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
                         Day
                       </Text>
                       <Text
-                        style={{ fontSize: 14, fontWeight: 600, color: st.onBrand }}
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 600,
+                          lineHeight: 1,
+                          color: st.onBrand,
+                        }}
                       >
                         {d.index}
                       </Text>
@@ -1416,13 +1438,12 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
             );
           })}
           </View>
-        </Page>
+        </>
       ) : null}
 
       {/* ---------------------------------------------------------- visa */}
       {doc.visa ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead num={sec("Visa")} title="Visa & travel documents" st={st} />
 
           <View style={[s.card, s.cardAccent]} wrap={false}>
@@ -1551,12 +1572,182 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
               ) : null}
             </View>
           ) : null}
-        </Page>
+        </>
+      ) : null}
+
+      {/* ----------------------------------------------------- insurance */}
+      {doc.insurance ? (
+        <>
+          <SectionHead num={sec("Insurance")} title="Travel insurance" st={st} />
+
+          <View style={[s.card, s.cardAccent]} wrap={false}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SP.sm }}>
+              <Text style={s.pill}>{doc.insurance.mode}</Text>
+              {doc.insurance.requiredForVisa ? (
+                <Text
+                  style={{ fontSize: 6.5, color: st.brand, fontWeight: 600, letterSpacing: 0.8 }}
+                >
+                  REQUIRED FOR YOUR VISA
+                </Text>
+              ) : null}
+            </View>
+            <Text style={[s.lead, { marginTop: SP.sm }]}>{doc.insurance.blurb}</Text>
+            {doc.insurance.facts.length ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  rowGap: SP.md,
+                  marginTop: SP.lg,
+                }}
+              >
+                {doc.insurance.facts.map((f) => (
+                  <View key={f.label} style={{ width: "33.33%", paddingRight: SP.md }}>
+                    <KV label={f.label} value={f.value} st={st} />
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+
+          {doc.insurance.assistance.phone || doc.insurance.assistance.email ? (
+            <View style={[s.totalBand, { marginTop: SP.md }]} wrap={false}>
+              <View>
+                <Text
+                  style={{
+                    fontSize: 6.5,
+                    letterSpacing: 1,
+                    fontWeight: 600,
+                    color: st.onBrand,
+                    opacity: 0.8,
+                  }}
+                >
+                  {doc.insurance.minimumsOnly
+                    ? "EMERGENCY CONTACT"
+                    : "24×7 EMERGENCY ASSISTANCE"}
+                </Text>
+                {doc.insurance.assistance.phone ? (
+                  <Text
+                    style={{ fontSize: 13, fontWeight: 600, color: st.onBrand, marginTop: 2 }}
+                  >
+                    {doc.insurance.assistance.phone}
+                  </Text>
+                ) : null}
+              </View>
+              {doc.insurance.assistance.email ? (
+                <Text style={{ fontSize: 8.5, color: st.onBrand, opacity: 0.9 }}>
+                  Claims: {doc.insurance.assistance.email}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {doc.insurance.benefits.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              <View wrap={false} minPresenceAhead={30}>
+                <Text style={s.blockLabel}>
+                  {doc.insurance.minimumsOnly
+                    ? "Minimum cover your policy should carry"
+                    : "Schedule of benefits"}
+                </Text>
+                <View style={s.thead}>
+                  <Text style={[s.th, { flex: 5 }]}>Benefit</Text>
+                  <Text style={[s.th, { flex: 2.6, textAlign: "right" }]}>
+                    {doc.insurance.minimumsOnly ? "At least" : "Limit per person"}
+                  </Text>
+                  {doc.insurance.hasDeductibles ? (
+                    <Text style={[s.th, { flex: 1.4, textAlign: "right" }]}>Excess</Text>
+                  ) : null}
+                </View>
+              </View>
+              {doc.insurance.benefits.map((b) => (
+                <View key={b.id} style={s.tr} wrap={false}>
+                  <Text style={{ flex: 5, fontSize: 8.5, paddingRight: SP.md }}>{b.label}</Text>
+                  <Text style={{ flex: 2.6, fontSize: 8.5, fontWeight: 600, textAlign: "right" }}>
+                    {b.limit}
+                  </Text>
+                  {doc.insurance!.hasDeductibles ? (
+                    <Text style={{ flex: 1.4, fontSize: 8.5, color: MUTED, textAlign: "right" }}>
+                      {b.deductible || "—"}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {doc.insurance.claimSteps.length || doc.insurance.exclusions.length ? (
+            <View style={[s.row, { gap: SP.xl, marginTop: SP.xl }]}>
+              {doc.insurance.claimSteps.length ? (
+                <View style={{ flex: 1 }}>
+                  <Text style={s.blockLabel} minPresenceAhead={40}>How to make a claim</Text>
+                  <View style={s.list}>
+                    {doc.insurance.claimSteps.map((t, i) => (
+                      <View key={`${i}-${t}`} style={s.li} wrap={false}>
+                        <Text style={[s.liMark, { width: 13, fontSize: 8.5, color: st.brand }]}>
+                          {i + 1}.
+                        </Text>
+                        <Text style={s.liText}>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+              {doc.insurance.exclusions.length ? (
+                <View style={{ flex: 1 }}>
+                  <Text style={s.blockLabel} minPresenceAhead={40}>Not covered</Text>
+                  <Bullets
+                    items={doc.insurance.exclusions}
+                    st={st}
+                    mark={"×"}
+                    markColor="#B4453C"
+                  />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          {doc.insurance.travellers.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              <View wrap={false} minPresenceAhead={30}>
+                <Text style={s.blockLabel}>Insured travellers</Text>
+                <View style={s.thead}>
+                  <Text style={[s.th, { flex: 3 }]}>Name</Text>
+                  <Text style={[s.th, { flex: 1 }]}>Age</Text>
+                  <Text style={[s.th, { flex: 3 }]}>Nominee</Text>
+                  <Text style={[s.th, { flex: 2.4 }]}>Certificate</Text>
+                  <Text style={[s.th, { flex: 2.2, textAlign: "right" }]}>Status</Text>
+                </View>
+              </View>
+              {doc.insurance.travellers.map((t) => (
+                <View key={t.id} style={s.tr} wrap={false}>
+                  <Text style={{ flex: 3, fontSize: 9, fontWeight: 600 }}>{t.name}</Text>
+                  <Text style={{ flex: 1, fontSize: 8.5, color: MUTED }}>{t.age}</Text>
+                  <Text style={{ flex: 3, fontSize: 8.5, color: MUTED }}>{t.nominee}</Text>
+                  <Text style={{ flex: 2.4, fontSize: 8.5, color: MUTED }}>{t.certificate}</Text>
+                  <Text style={{ flex: 2.2, fontSize: 8.5, textAlign: "right" }}>{t.status}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {doc.insurance.notes.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              <View wrap={false}>
+                <Text style={s.blockLabel}>Please note</Text>
+                <Bullets items={doc.insurance.notes.slice(0, 1)} st={st} />
+              </View>
+              {doc.insurance.notes.length > 1 ? (
+                <View style={{ marginTop: SP.sm }}>
+                  <Bullets items={doc.insurance.notes.slice(1)} st={st} />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       {/* ------------------------------------------------------- pricing */}
-      <Page size="A4" style={s.page}>
-        <Furniture doc={doc} st={st} />
         <SectionHead num={sec("Pricing")} title="Pricing breakdown" st={st} />
 
         <View style={s.thead}>
@@ -1579,9 +1770,9 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
           )
         )}
 
-        <View style={s.tr}>
+        <View style={s.tr} wrap={false}>
           <Text style={{ flex: 3, fontSize: 9, fontWeight: 600 }}>Subtotal</Text>
-          <Text style={{ flex: 3 }} />
+          <View style={{ flex: 3 }} />
           <Text
             style={{ flex: 1.4, fontSize: 9, fontWeight: 600, textAlign: "right" }}
           >
@@ -1590,9 +1781,9 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
         </View>
 
         {p.discountAmount ? (
-          <View style={s.tr}>
+          <View style={s.tr} wrap={false}>
             <Text style={{ flex: 3, fontSize: 9 }}>{p.discountLabel}</Text>
-            <Text style={{ flex: 3 }} />
+            <View style={{ flex: 3 }} />
             <Text style={{ flex: 1.4, fontSize: 9, textAlign: "right" }}>
               − {money(p.discountAmount)}
             </Text>
@@ -1600,9 +1791,9 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
         ) : null}
 
         {p.serviceChargeAmount ? (
-          <View style={s.tr}>
+          <View style={s.tr} wrap={false}>
             <Text style={{ flex: 3, fontSize: 9 }}>Service charge</Text>
-            <Text style={{ flex: 3 }} />
+            <View style={{ flex: 3 }} />
             <Text style={{ flex: 1.4, fontSize: 9, textAlign: "right" }}>
               {money(p.serviceChargeAmount)}
             </Text>
@@ -1610,7 +1801,7 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
         ) : null}
 
         {p.taxAmount ? (
-          <View style={s.tr}>
+          <View style={s.tr} wrap={false}>
             <Text style={{ flex: 3, fontSize: 9 }}>{p.taxLabel}</Text>
             <Text style={{ flex: 3, fontSize: 8.5, color: MUTED }}>
               on {money(p.taxableBase)}
@@ -1694,24 +1885,22 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
         ) : null}
 
         {doc.paymentTerms ? (
-          <View style={{ marginTop: SP.xl }}>
+          <View style={{ marginTop: SP.xl }} wrap={false}>
             <Text style={s.blockLabel}>Payment terms</Text>
             <Text style={s.lead}>{doc.paymentTerms}</Text>
           </View>
         ) : null}
 
         {doc.cancellationPolicy ? (
-          <View style={{ marginTop: SP.lg }}>
+          <View style={{ marginTop: SP.lg }} wrap={false}>
             <Text style={s.blockLabel}>Cancellation policy</Text>
             <Text style={s.lead}>{doc.cancellationPolicy}</Text>
           </View>
         ) : null}
-      </Page>
 
       {/* --------------------------------------------------------- scope */}
       {doc.inclusions.length || doc.exclusions.length ? (
-        <Page size="A4" style={s.page}>
-          <Furniture doc={doc} st={st} />
+        <>
           <SectionHead
             num={sec("Scope")}
             title="Inclusions & exclusions"
@@ -1719,11 +1908,11 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
           />
           <View style={[s.row, { gap: SP.xl }]}>
             <View style={{ flex: 1 }}>
-              <Text style={s.blockLabel}>What is included</Text>
+              <Text style={s.blockLabel} minPresenceAhead={40}>What is included</Text>
               <Bullets items={doc.inclusions} st={st} mark={"✓"} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.blockLabel}>What is not included</Text>
+              <Text style={s.blockLabel} minPresenceAhead={40}>What is not included</Text>
               <Bullets
                 items={doc.exclusions}
                 st={st}
@@ -1732,24 +1921,22 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
               />
             </View>
           </View>
-        </Page>
+        </>
       ) : null}
 
       {/* --------------------------------------------------------- terms */}
-      <Page size="A4" style={s.page}>
-        <Furniture doc={doc} st={st} />
         <SectionHead num={sec("Conditions")} title="Important notes & terms" st={st} />
 
         {doc.importantNotes.length ? (
           <View>
-            <Text style={s.blockLabel}>Important notes</Text>
+            <Text style={s.blockLabel} minPresenceAhead={40}>Important notes</Text>
             <Bullets items={doc.importantNotes} st={st} />
           </View>
         ) : null}
 
         {doc.terms.length ? (
           <View style={{ marginTop: SP.xxl }}>
-            <Text style={s.blockLabel}>Terms &amp; conditions</Text>
+            <Text style={s.blockLabel} minPresenceAhead={40}>Terms &amp; conditions</Text>
             <View style={s.list}>
               {doc.terms.map((t, i) => (
                 <View key={`${i}-${t}`} style={s.li} wrap={false}>

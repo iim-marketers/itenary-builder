@@ -4,8 +4,11 @@ import {
   makeDayItem,
   makeFlight,
   makeHotel,
+  makeInsurance,
+  makeInsured,
   makeItinerary,
   makeLineItem,
+  standardBenefits,
 } from "@/lib/defaults";
 import { addDays, toISODate } from "@/lib/format";
 import type { Itinerary } from "@/lib/types";
@@ -719,6 +722,77 @@ export function makeIndiaSample(): Itinerary {
       }),
     ],
 
+    /* ---------------------------------------------------------- insurance */
+    insurance: makeInsurance({
+      mode: "included",
+      scope: "domestic",
+      provider: "Suraksha General Insurance",
+      planName: "Bharat Yatra Family",
+      policyType: "group",
+      coverageRegion: "Within India",
+      sumInsured: "₹ 2,00,000 per person",
+      policyNumber: "SGI-GRP-26-40217",
+      startDate: start,
+      endDate: d(9),
+      premiumPerPerson: 1400,
+      pax: 7,
+      addToPricing: true,
+      benefits: standardBenefits("domestic"),
+      assistancePhone: "+91 22 6800 4400",
+      assistanceEmail: "travelclaims@suraksha.example",
+      travellers: [
+        makeInsured({
+          fullName: "Rajeev Deshpande",
+          dateOfBirth: "1982-07-19",
+          nominee: "Shalini Deshpande (spouse)",
+          certificateNumber: "40217-01",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "Shalini Deshpande",
+          dateOfBirth: "1984-02-05",
+          nominee: "Rajeev Deshpande (spouse)",
+          certificateNumber: "40217-02",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "Vasant Deshpande",
+          dateOfBirth: "1957-09-30",
+          nominee: "Rajeev Deshpande (son)",
+          preExistingConditions: "Type 2 diabetes and hypertension, on regular medication",
+          certificateNumber: "40217-03",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "Sudha Deshpande",
+          dateOfBirth: "1960-12-11",
+          nominee: "Rajeev Deshpande (son)",
+          certificateNumber: "40217-04",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "Aarav Deshpande",
+          dateOfBirth: "2013-04-22",
+          nominee: "Rajeev Deshpande (father)",
+          certificateNumber: "40217-05",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "Ira Deshpande",
+          dateOfBirth: "2017-01-08",
+          nominee: "Rajeev Deshpande (father)",
+          status: "proposal-submitted",
+        }),
+        makeInsured({
+          fullName: "Kabir Deshpande",
+          dateOfBirth: "2020-06-15",
+          nominee: "Rajeev Deshpande (father)",
+          status: "proposal-submitted",
+        }),
+      ],
+      showTravellers: true,
+    }),
+
     /* ------------------------------------------------------------ pricing */
     pricing: {
       ...base.pricing,
@@ -731,7 +805,6 @@ export function makeIndiaSample(): Itinerary {
       guideCharges: 8500,
       otherExpenses: [
         makeLineItem({ label: "Amritsar–Haridwar overnight train, 2A (7 berths)", amount: 14700 }),
-        makeLineItem({ label: "Travel insurance (7 travellers)", amount: 9800 }),
         makeLineItem({ label: "Monument still-camera fees & porterage", amount: 4500 }),
       ],
       serviceChargeMode: "percent",

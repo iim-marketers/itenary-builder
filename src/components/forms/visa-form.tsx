@@ -70,7 +70,7 @@ const REQUIREMENT_ICON: Record<VisaRequirement, React.ComponentType<{ className?
   embassy: Landmark,
 };
 
-const TONE_CLASS: Record<StatusTone, string> = {
+export const TONE_CLASS: Record<StatusTone, string> = {
   neutral: "bg-muted text-muted-foreground",
   info: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
   progress: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
@@ -78,7 +78,7 @@ const TONE_CLASS: Record<StatusTone, string> = {
   danger: "bg-destructive/10 text-destructive",
 };
 
-const TONE_DOT: Record<StatusTone, string> = {
+export const TONE_DOT: Record<StatusTone, string> = {
   neutral: "bg-muted-foreground/50",
   info: "bg-sky-500",
   progress: "bg-amber-500",

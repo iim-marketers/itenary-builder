@@ -185,8 +185,8 @@ export function TripForm() {
                 value={trip.infants}
                 onValueChange={(v) => setTrip({ infants: Math.max(0, Math.floor(v)) })}
               />
-              <div className="grid gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+              <div className="grid content-start gap-1.5">
+                <span className="text-xs leading-none font-medium text-muted-foreground">
                   Total travellers
                 </span>
                 <div className="flex h-8 items-center rounded-lg border border-dashed px-2.5 text-sm font-semibold tabular-nums">

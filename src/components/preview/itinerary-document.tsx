@@ -28,18 +28,24 @@ export function ItineraryDocument({ doc }: { doc: DocModel }) {
     <Page key="cover" cover>
       <div className="doc-cover-band">
         <div className="doc-cover-brandrow">
-          <div>
-            {doc.logo ? (
+          <div className="doc-cover-brand">
+            {doc.mark && !doc.logo ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={doc.logo} alt="" className="doc-cover-logo" />
-            ) : (
-              <div className="doc-cover-mark">{doc.companyName}</div>
-            )}
-            {doc.tagline ? (
-              <div className="doc-cover-tagline" style={{ marginTop: 6 }}>
-                {doc.tagline}
-              </div>
+              <img src={doc.mark} alt="" className="doc-cover-brandmark" />
             ) : null}
+            <div>
+              {doc.logo ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={doc.logo} alt="" className="doc-cover-logo" />
+              ) : (
+                <div className="doc-cover-mark">{doc.companyName}</div>
+              )}
+              {doc.tagline ? (
+                <div className="doc-cover-tagline" style={{ marginTop: 6 }}>
+                  {doc.tagline}
+                </div>
+              ) : null}
+            </div>
           </div>
           <div className="doc-cover-ref">
             {doc.reference ? <div>Ref · {doc.reference}</div> : null}
@@ -710,6 +716,175 @@ export function ItineraryDocument({ doc }: { doc: DocModel }) {
             </div>
             <ul className="doc-list">
               {v.notes.map((l, i) => (
+                <li key={`${i}-${l}`}>{l}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </Page>
+    );
+  }
+
+  /* --------------------------------------------------------- insurance */
+  if (doc.insurance) {
+    const ins = doc.insurance;
+    push(
+      <Page key="insurance" doc={doc}>
+        <SectionHead num={sec("Insurance")} title="Travel insurance" />
+
+        <div className="doc-card doc-card-accent">
+          <span className="doc-pill">{ins.mode}</span>
+          {ins.requiredForVisa ? (
+            <span className="doc-tag" style={{ color: "var(--doc-brand)" }}>
+              Required for your visa
+            </span>
+          ) : null}
+          <p className="doc-lead" style={{ margin: "10px 0 0" }}>
+            {ins.blurb}
+          </p>
+          {ins.facts.length ? (
+            <div className="doc-grid-3" style={{ marginTop: 14, gap: "12px 20px" }}>
+              {ins.facts.map((f) => (
+                <KV key={f.label} label={f.label} value={f.value} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {ins.assistance.phone || ins.assistance.email ? (
+          <div
+            style={{
+              marginTop: 14,
+              background: "var(--doc-brand)",
+              color: "#ffffff",
+              borderRadius: 10,
+              padding: "12px 18px",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "6px 20px",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.8, fontWeight: 600 }}>
+                {ins.minimumsOnly ? "Emergency contact" : "24×7 emergency assistance"}
+              </div>
+              {ins.assistance.phone ? (
+                <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+                  {ins.assistance.phone}
+                </div>
+              ) : null}
+            </div>
+            {ins.assistance.email ? (
+              <div style={{ fontSize: 11.5, opacity: 0.9 }}>Claims: {ins.assistance.email}</div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {ins.benefits.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div className="doc-eyebrow" style={{ marginBottom: 8 }}>
+              {ins.minimumsOnly ? "Minimum cover your policy should carry" : "Schedule of benefits"}
+            </div>
+            <table className="doc-table">
+              <thead>
+                <tr>
+                  <th>Benefit</th>
+                  <th className="doc-num">{ins.minimumsOnly ? "At least" : "Limit per person"}</th>
+                  {ins.hasDeductibles ? <th className="doc-num">Excess</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {ins.benefits.map((b) => (
+                  <tr key={b.id}>
+                    <td>{b.label}</td>
+                    <td className="doc-num doc-strong" style={{ paddingLeft: 12 }}>
+                      {b.limit}
+                    </td>
+                    {ins.hasDeductibles ? (
+                      <td className="doc-num" style={{ color: "var(--doc-muted)", paddingLeft: 12 }}>
+                        {b.deductible || "—"}
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {ins.exclusions.length || ins.claimSteps.length ? (
+          <div
+            className={ins.exclusions.length && ins.claimSteps.length ? "doc-grid-2" : undefined}
+            style={{ marginTop: 22, gap: 24 }}
+          >
+            {ins.claimSteps.length ? (
+              <div>
+                <div className="doc-eyebrow" style={{ marginBottom: 10 }}>
+                  How to make a claim
+                </div>
+                <ol className="doc-list doc-list--num">
+                  {ins.claimSteps.map((l, i) => (
+                    <li key={`${i}-${l}`}>{l}</li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+            {ins.exclusions.length ? (
+              <div>
+                <div className="doc-eyebrow" style={{ marginBottom: 10 }}>
+                  Not covered
+                </div>
+                <ul className="doc-list doc-list--cross">
+                  {ins.exclusions.map((l, i) => (
+                    <li key={`${i}-${l}`}>{l}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {ins.travellers.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div className="doc-eyebrow" style={{ marginBottom: 8 }}>
+              Insured travellers
+            </div>
+            <table className="doc-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Nominee</th>
+                  <th>Certificate</th>
+                  <th className="doc-num">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ins.travellers.map((t) => (
+                  <tr key={t.id}>
+                    <td className="doc-strong">{t.name}</td>
+                    <td style={{ color: "var(--doc-muted)", fontVariantNumeric: "tabular-nums" }}>
+                      {t.age}
+                    </td>
+                    <td style={{ color: "var(--doc-muted)" }}>{t.nominee}</td>
+                    <td style={{ color: "var(--doc-muted)" }}>{t.certificate}</td>
+                    <td className="doc-num">{t.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {ins.notes.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div className="doc-eyebrow" style={{ marginBottom: 10 }}>
+              Please note
+            </div>
+            <ul className="doc-list">
+              {ins.notes.map((l, i) => (
                 <li key={`${i}-${l}`}>{l}</li>
               ))}
             </ul>
