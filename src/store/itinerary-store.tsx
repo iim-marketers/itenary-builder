@@ -4,12 +4,14 @@ import * as React from "react";
 import { toast } from "sonner";
 import {
   makeActivity,
+  makeApplicant,
   makeDay,
   makeDayItem,
   makeFlight,
   makeHotel,
   makeItinerary,
   makeLineItem,
+  makeVisaDocument,
   normalizeItinerary,
 } from "@/lib/defaults";
 import type {
@@ -25,6 +27,9 @@ import type {
   LineItem,
   PricingInput,
   TripInfo,
+  VisaApplicant,
+  VisaDocument,
+  VisaInfo,
 } from "@/lib/types";
 
 const STORAGE_KEY = "itinerary-builder:draft";
@@ -66,6 +71,16 @@ type Action =
   | { type: "dayItem/duplicate"; dayId: ID; id: ID }
   | { type: "dayItem/move"; dayId: ID; id: ID; delta: number }
   | { type: "dayItem/sort"; dayId: ID }
+  | { type: "visa/patch"; patch: Partial<VisaInfo> }
+  | { type: "visaDoc/add"; doc?: Partial<VisaDocument> }
+  | { type: "visaDoc/patch"; id: ID; patch: Partial<VisaDocument> }
+  | { type: "visaDoc/remove"; id: ID }
+  | { type: "visaDoc/move"; id: ID; delta: number }
+  | { type: "applicant/add"; applicants?: Partial<VisaApplicant>[] }
+  | { type: "applicant/patch"; id: ID; patch: Partial<VisaApplicant> }
+  | { type: "applicant/remove"; id: ID }
+  | { type: "applicant/duplicate"; id: ID }
+  | { type: "applicant/move"; id: ID; delta: number }
   | { type: "expense/add" }
   | { type: "expense/patch"; id: ID; patch: Partial<LineItem> }
   | { type: "expense/remove"; id: ID };
@@ -318,6 +333,93 @@ function reducer(state: Itinerary, action: Action): Itinerary {
         days: state.days.map((d) =>
           d.id === action.dayId ? { ...d, items: [...d.items].sort(byTime) } : d
         ),
+      };
+
+    /* --------------------------------------------------------------- visa */
+    case "visa/patch":
+      return { ...state, visa: { ...state.visa, ...action.patch } };
+    case "visaDoc/add":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          documents: [...state.visa.documents, makeVisaDocument(action.doc)],
+        },
+      };
+    case "visaDoc/patch":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          documents: patchById(state.visa.documents, action.id, action.patch),
+        },
+      };
+    case "visaDoc/remove":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          documents: state.visa.documents.filter((d) => d.id !== action.id),
+        },
+      };
+    case "visaDoc/move":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          documents: moveById(state.visa.documents, action.id, action.delta),
+        },
+      };
+    case "applicant/add": {
+      // Applicants usually share a nationality, so new ones inherit the last one's.
+      const last = state.visa.applicants[state.visa.applicants.length - 1];
+      const specs = action.applicants?.length ? action.applicants : [{}];
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          applicants: [
+            ...state.visa.applicants,
+            ...specs.map((a) =>
+              makeApplicant({ nationality: last?.nationality ?? "", ...a })
+            ),
+          ],
+        },
+      };
+    }
+    case "applicant/patch":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          applicants: patchById(state.visa.applicants, action.id, action.patch),
+        },
+      };
+    case "applicant/remove":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          applicants: state.visa.applicants.filter((a) => a.id !== action.id),
+        },
+      };
+    case "applicant/duplicate":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          applicants: duplicateById(state.visa.applicants, action.id, (a) =>
+            makeApplicant({ ...a, id: undefined })
+          ),
+        },
+      };
+    case "applicant/move":
+      return {
+        ...state,
+        visa: {
+          ...state.visa,
+          applicants: moveById(state.visa.applicants, action.id, action.delta),
+        },
       };
 
     /* ----------------------------------------------------------- expenses */

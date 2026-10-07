@@ -62,6 +62,7 @@ const SECTION_LABEL: Record<SectionKey, string> = {
   hotels: "Hotels",
   activities: "Activities",
   days: "Day-by-day",
+  visa: "Visa details",
   pricing: "Pricing",
   content: "Notes & terms",
 };

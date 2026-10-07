@@ -625,6 +625,31 @@
   font-size: 13px;
 }
 
+/* An empty tick-box: the guest's document checklist. */
+.doc-list--box li {
+  padding-left: 22px;
+}
+
+.doc-list--box li::before {
+  background: none;
+  width: 10px;
+  height: 10px;
+  top: 4px;
+  left: 0;
+  border-radius: 2px;
+  border: 1.2px solid var(--doc-brand);
+}
+
+.doc-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--doc-faint);
+}
+
 .doc-list--num {
   counter-reset: doc-num;
 }

@@ -8,6 +8,7 @@ import {
   Plane,
   ReceiptText,
   ScrollText,
+  Stamp,
   UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ import { FlightsForm } from "@/components/forms/flights-form";
 import { HotelsForm } from "@/components/forms/hotels-form";
 import { PricingForm } from "@/components/forms/pricing-form";
 import { TripForm } from "@/components/forms/trip-form";
+import { VisaForm } from "@/components/forms/visa-form";
 import { Toolbar } from "@/components/layout/toolbar";
 import { PreviewPanel } from "@/components/preview/preview-panel";
 import { buildDocModel } from "@/lib/document-model";
@@ -47,6 +49,7 @@ const TABS: {
   { key: "hotels", label: "Hotels", short: "Hotels", icon: Hotel },
   { key: "activities", label: "Activities", short: "Activities", icon: Camera },
   { key: "days", label: "Day-by-day", short: "Days", icon: CalendarRange },
+  { key: "visa", label: "Visa details", short: "Visa", icon: Stamp },
   { key: "pricing", label: "Pricing", short: "Pricing", icon: ReceiptText },
   { key: "content", label: "Notes & terms", short: "Terms", icon: ScrollText },
 ];
@@ -153,6 +156,9 @@ export function BuilderShell() {
             </TabsContent>
             <TabsContent value="days" className="mt-0">
               <DaysForm />
+            </TabsContent>
+            <TabsContent value="visa" className="mt-0">
+              <VisaForm />
             </TabsContent>
             <TabsContent value="pricing" className="mt-0">
               <PricingForm />

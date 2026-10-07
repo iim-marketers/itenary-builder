@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import {
   FieldGrid,
   NumberField,
   SelectField,
   TextField,
+  ToggleRow,
 } from "@/components/forms/fields";
 import { SectionHead, SubHeading } from "@/components/forms/section-shell";
 import { currencySymbol, formatMoney } from "@/lib/format";
@@ -74,6 +74,15 @@ export function PricingForm() {
                 } · includes guide and transport charges entered there`}
                 amount={money(b.activitiesTotal)}
               />
+              {b.visaFees ? (
+                <AutoRow
+                  label="Visa fees"
+                  detail={`${itinerary.visa.pax} applicant${
+                    itinerary.visa.pax === 1 ? "" : "s"
+                  } · set on the Visa details tab`}
+                  amount={money(b.visaFees)}
+                />
+              ) : null}
             </CardContent>
           </Card>
 
@@ -325,6 +334,7 @@ export function PricingForm() {
               {b.guideCharges ? (
                 <CalcRow label="Guide charges" value={money(b.guideCharges)} />
               ) : null}
+              {b.visaFees ? <CalcRow label="Visa fees" value={money(b.visaFees)} /> : null}
               {b.otherExpensesTotal ? (
                 <CalcRow label="Other expenses" value={money(b.otherExpensesTotal)} />
               ) : null}
@@ -441,27 +451,5 @@ function CalcRow({
         {value}
       </span>
     </div>
-  );
-}
-
-function ToggleRow({
-  label,
-  description,
-  checked,
-  onCheckedChange,
-}: {
-  label: string;
-  description: string;
-  checked: boolean;
-  onCheckedChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border p-3">
-      <span className="min-w-0">
-        <span className="block text-sm font-medium">{label}</span>
-        <span className="block text-xs text-muted-foreground">{description}</span>
-      </span>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </label>
   );
 }

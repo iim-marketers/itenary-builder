@@ -1,4 +1,10 @@
 import { toISODate } from "./format";
+import {
+  DEFAULT_PHOTO_SPECS,
+  DEFAULT_SUBMISSION,
+  DEFAULT_VISA_NOTES,
+  STANDARD_DOCUMENTS,
+} from "./visa";
 import type {
   Activity,
   ContentBlocks,
@@ -9,6 +15,10 @@ import type {
   ItineraryDay,
   ItineraryImage,
   LineItem,
+  VisaApplicant,
+  VisaDocument,
+  VisaInfo,
+  VisaRequirement,
 } from "./types";
 
 export function uid(prefix = "id"): string {
@@ -119,6 +129,57 @@ export function makeLineItem(partial: Partial<LineItem> = {}): LineItem {
   return { label: "", amount: 0, ...partial, id: partial.id || uid("ln") };
 }
 
+export function makeVisaDocument(partial: Partial<VisaDocument> = {}): VisaDocument {
+  return { label: "", mandatory: true, ...partial, id: partial.id || uid("vdoc") };
+}
+
+export function makeApplicant(partial: Partial<VisaApplicant> = {}): VisaApplicant {
+  return {
+    fullName: "",
+    nationality: "",
+    dateOfBirth: "",
+    passportNumber: "",
+    passportIssueDate: "",
+    passportExpiry: "",
+    status: "awaiting-documents",
+    visaNumber: "",
+    notes: "",
+    ...partial,
+    id: partial.id || uid("app"),
+  };
+}
+
+/** The standard document checklist for a kind of visa, as fresh entities. */
+export function standardVisaDocuments(requirement: VisaRequirement): VisaDocument[] {
+  if (requirement === "not-applicable") return [];
+  return STANDARD_DOCUMENTS[requirement].map((d) => makeVisaDocument(d));
+}
+
+export function makeVisa(partial: Partial<VisaInfo> = {}): VisaInfo {
+  return {
+    requirement: "not-applicable",
+    country: "",
+    visaType: "Tourist visa",
+    entries: "single",
+    validity: "",
+    maxStay: "",
+    processingTime: "",
+    applyVia: "",
+    documentsDueBy: "",
+    feePerPerson: 0,
+    serviceFeePerPerson: 0,
+    pax: 2,
+    addToPricing: true,
+    documents: [],
+    submissionInstructions: DEFAULT_SUBMISSION,
+    photoSpecs: DEFAULT_PHOTO_SPECS,
+    notes: [...DEFAULT_VISA_NOTES],
+    applicants: [],
+    showApplicants: true,
+    ...partial,
+  };
+}
+
 export const DEFAULT_CONTENT: ContentBlocks = {
   inclusions: [
     "Accommodation as per the itinerary on the mentioned meal plan",
@@ -188,6 +249,7 @@ export function makeItinerary(): Itinerary {
     hotels: [],
     activities: [],
     days: [],
+    visa: makeVisa(),
     pricing: {
       transportation: 0,
       transportationNote: "",
@@ -272,6 +334,18 @@ export function normalizeItinerary(raw: unknown): Itinerary {
         ),
       })
     ),
+    visa: makeVisa({
+      ...draft.visa,
+      documents: asArray<Partial<VisaDocument>>(draft.visa?.documents).map((d) =>
+        makeVisaDocument(d)
+      ),
+      applicants: asArray<Partial<VisaApplicant>>(draft.visa?.applicants).map((a) =>
+        makeApplicant(a)
+      ),
+      notes: draft.visa?.notes
+        ? asArray<unknown>(draft.visa.notes).filter((n): n is string => typeof n === "string")
+        : [...DEFAULT_VISA_NOTES],
+    }),
     pricing: {
       ...base.pricing,
       ...draft.pricing,
