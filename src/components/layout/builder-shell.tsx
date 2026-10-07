@@ -9,6 +9,7 @@ import {
   ReceiptText,
   ScrollText,
   Stamp,
+  Umbrella,
   UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import { ContentForm } from "@/components/forms/content-form";
 import { DaysForm } from "@/components/forms/days-form";
 import { FlightsForm } from "@/components/forms/flights-form";
 import { HotelsForm } from "@/components/forms/hotels-form";
+import { InsuranceForm } from "@/components/forms/insurance-form";
 import { PricingForm } from "@/components/forms/pricing-form";
 import { TripForm } from "@/components/forms/trip-form";
 import { VisaForm } from "@/components/forms/visa-form";
@@ -50,6 +52,7 @@ const TABS: {
   { key: "activities", label: "Activities", short: "Activities", icon: Camera },
   { key: "days", label: "Day-by-day", short: "Days", icon: CalendarRange },
   { key: "visa", label: "Visa details", short: "Visa", icon: Stamp },
+  { key: "insurance", label: "Travel insurance", short: "Insurance", icon: Umbrella },
   { key: "pricing", label: "Pricing", short: "Pricing", icon: ReceiptText },
   { key: "content", label: "Notes & terms", short: "Terms", icon: ScrollText },
 ];
@@ -159,6 +162,9 @@ export function BuilderShell() {
             </TabsContent>
             <TabsContent value="visa" className="mt-0">
               <VisaForm />
+            </TabsContent>
+            <TabsContent value="insurance" className="mt-0">
+              <InsuranceForm />
             </TabsContent>
             <TabsContent value="pricing" className="mt-0">
               <PricingForm />

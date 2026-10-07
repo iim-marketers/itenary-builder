@@ -258,8 +258,8 @@ export function FlightsForm() {
                     value={f.pax}
                     onValueChange={(v) => patch(f.id, { pax: Math.max(1, Math.floor(v)) })}
                   />
-                  <div className="grid gap-1.5">
-                    <span className="text-xs font-medium text-muted-foreground">
+                  <div className="grid content-start gap-1.5">
+                    <span className="text-xs leading-none font-medium text-muted-foreground">
                       Sector total
                     </span>
                     <div className="flex h-8 items-center rounded-lg border border-dashed px-2.5 text-sm font-semibold tabular-nums">

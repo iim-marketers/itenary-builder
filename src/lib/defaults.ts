@@ -5,6 +5,12 @@ import {
   DEFAULT_VISA_NOTES,
   STANDARD_DOCUMENTS,
 } from "./visa";
+import {
+  DEFAULT_CLAIM_STEPS,
+  DEFAULT_EXCLUSIONS,
+  DEFAULT_INSURANCE_NOTES,
+  STANDARD_BENEFITS,
+} from "./insurance";
 import type {
   Activity,
   ContentBlocks,
@@ -13,6 +19,10 @@ import type {
   Hotel,
   Itinerary,
   ItineraryDay,
+  InsuranceBenefit,
+  InsuranceInfo,
+  InsuranceScope,
+  InsuredTraveller,
   ItineraryImage,
   LineItem,
   VisaApplicant,
@@ -180,6 +190,62 @@ export function makeVisa(partial: Partial<VisaInfo> = {}): VisaInfo {
   };
 }
 
+export function makeBenefit(partial: Partial<InsuranceBenefit> = {}): InsuranceBenefit {
+  return { label: "", limit: "", deductible: "", ...partial, id: partial.id || uid("ben") };
+}
+
+export function makeInsured(partial: Partial<InsuredTraveller> = {}): InsuredTraveller {
+  return {
+    fullName: "",
+    dateOfBirth: "",
+    passportNumber: "",
+    nominee: "",
+    preExistingConditions: "",
+    certificateNumber: "",
+    status: "details-pending",
+    ...partial,
+    id: partial.id || uid("ins"),
+  };
+}
+
+/** The standard schedule of benefits for a scope, as fresh entities. */
+export function standardBenefits(scope: InsuranceScope): InsuranceBenefit[] {
+  return STANDARD_BENEFITS[scope].map((b) => makeBenefit(b));
+}
+
+export function makeInsurance(partial: Partial<InsuranceInfo> = {}): InsuranceInfo {
+  return {
+    mode: "none",
+    scope: "international",
+    provider: "",
+    planName: "",
+    policyType: "individual",
+    coverageRegion: "",
+    sumInsured: "",
+    policyNumber: "",
+    startDate: "",
+    endDate: "",
+    requiredForVisa: false,
+    premiumPerPerson: 0,
+    pax: 2,
+    addToPricing: true,
+    benefits: [],
+    exclusions: [...DEFAULT_EXCLUSIONS],
+    assistancePhone: "",
+    assistanceEmail: "",
+    claimSteps: [...DEFAULT_CLAIM_STEPS],
+    notes: [...DEFAULT_INSURANCE_NOTES],
+    travellers: [],
+    showTravellers: true,
+    ...partial,
+  };
+}
+
+const asStrings = (value: unknown, fallback: string[]): string[] =>
+  Array.isArray(value)
+    ? value.filter((n): n is string => typeof n === "string")
+    : [...fallback];
+
 export const DEFAULT_CONTENT: ContentBlocks = {
   inclusions: [
     "Accommodation as per the itinerary on the mentioned meal plan",
@@ -250,6 +316,7 @@ export function makeItinerary(): Itinerary {
     activities: [],
     days: [],
     visa: makeVisa(),
+    insurance: makeInsurance(),
     pricing: {
       transportation: 0,
       transportationNote: "",
@@ -345,6 +412,18 @@ export function normalizeItinerary(raw: unknown): Itinerary {
       notes: draft.visa?.notes
         ? asArray<unknown>(draft.visa.notes).filter((n): n is string => typeof n === "string")
         : [...DEFAULT_VISA_NOTES],
+    }),
+    insurance: makeInsurance({
+      ...draft.insurance,
+      benefits: asArray<Partial<InsuranceBenefit>>(draft.insurance?.benefits).map((b) =>
+        makeBenefit(b)
+      ),
+      travellers: asArray<Partial<InsuredTraveller>>(draft.insurance?.travellers).map((t) =>
+        makeInsured(t)
+      ),
+      exclusions: asStrings(draft.insurance?.exclusions, DEFAULT_EXCLUSIONS),
+      claimSteps: asStrings(draft.insurance?.claimSteps, DEFAULT_CLAIM_STEPS),
+      notes: asStrings(draft.insurance?.notes, DEFAULT_INSURANCE_NOTES),
     }),
     pricing: {
       ...base.pricing,

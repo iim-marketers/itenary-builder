@@ -83,6 +83,15 @@ export function PricingForm() {
                   amount={money(b.visaFees)}
                 />
               ) : null}
+              {b.insurancePremium ? (
+                <AutoRow
+                  label="Travel insurance"
+                  detail={`${itinerary.insurance.pax} traveller${
+                    itinerary.insurance.pax === 1 ? "" : "s"
+                  } · set on the Travel insurance tab`}
+                  amount={money(b.insurancePremium)}
+                />
+              ) : null}
             </CardContent>
           </Card>
 
@@ -154,7 +163,7 @@ export function PricingForm() {
 
               {pricing.otherExpenses.length === 0 ? (
                 <p className="rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
-                  No other expenses. Add visa fees, insurance, permits and the like.
+                  No other expenses. Add permits, porterage, local SIM cards and the like.
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -162,7 +171,7 @@ export function PricingForm() {
                     <div key={l.id} className="flex items-center gap-2">
                       <Input
                         aria-label="Expense label"
-                        placeholder="Visa fees, insurance, permits…"
+                        placeholder="Permits, porterage, SIM cards…"
                         className="flex-1"
                         value={l.label}
                         onChange={(e) =>
@@ -335,6 +344,9 @@ export function PricingForm() {
                 <CalcRow label="Guide charges" value={money(b.guideCharges)} />
               ) : null}
               {b.visaFees ? <CalcRow label="Visa fees" value={money(b.visaFees)} /> : null}
+              {b.insurancePremium ? (
+                <CalcRow label="Travel insurance" value={money(b.insurancePremium)} />
+              ) : null}
               {b.otherExpensesTotal ? (
                 <CalcRow label="Other expenses" value={money(b.otherExpensesTotal)} />
               ) : null}

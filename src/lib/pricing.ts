@@ -1,6 +1,7 @@
 import { daysBetween, toMinutes } from "./format";
+import { hasPremium } from "./insurance";
 import { needsVisa } from "./visa";
-import type { Activity, Flight, Hotel, Itinerary, VisaInfo } from "./types";
+import type { Activity, Flight, Hotel, InsuranceInfo, Itinerary, VisaInfo } from "./types";
 
 const num = (v: unknown): number => {
   const n = typeof v === "number" ? v : Number(v);
@@ -50,6 +51,17 @@ export function visaTotal(v: VisaInfo): number {
   return round2(visaFeePerPerson(v) * Math.max(0, num(v.pax)));
 }
 
+/** Premium for the whole party, or 0 when the agency is not selling the policy. */
+export function insuranceTotal(i: InsuranceInfo): number {
+  if (!hasPremium(i.mode)) return 0;
+  return round2(num(i.premiumPerPerson) * Math.max(0, num(i.pax)));
+}
+
+/** Only an included policy can be folded into the package; an add-on never is. */
+export function insuranceInPackage(i: InsuranceInfo): boolean {
+  return i.mode === "included" && i.addToPricing;
+}
+
 /** Flight duration in minutes from the date/time pair, or null when incomplete. */
 export function flightDurationMinutes(f: Flight): number | null {
   const dep = toMinutes(f.departureDate, f.departureTime);
@@ -83,6 +95,8 @@ export interface PricingBreakdown {
   guideCharges: number;
   /** Visa fees folded into the package — 0 unless the admin opted in. */
   visaFees: number;
+  /** Insurance premium folded into the package — 0 unless included and opted in. */
+  insurancePremium: number;
   otherExpensesTotal: number;
   extrasTotal: number;
   subtotal: number;
@@ -147,6 +161,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
   const meals = round2(num(pricing.meals));
   const guideCharges = round2(num(pricing.guideCharges));
   const visaFees = it.visa.addToPricing ? visaTotal(it.visa) : 0;
+  const insurancePremium = insuranceInPackage(it.insurance) ? insuranceTotal(it.insurance) : 0;
   const otherExpensesTotal = round2(
     pricing.otherExpenses.reduce((s, l) => s + num(l.amount), 0)
   );
@@ -187,6 +202,18 @@ export function computePricing(it: Itinerary): PricingBreakdown {
       amount: visaFees,
     });
   }
+  if (insurancePremium) {
+    const ins = it.insurance;
+    const pax = Math.max(0, num(ins.pax));
+    extraRows.push({
+      key: "insurance",
+      label: "Travel insurance",
+      detail: [ins.provider.trim(), ins.planName.trim(), `${pax} traveller${pax === 1 ? "" : "s"}`]
+        .filter(Boolean)
+        .join(" · "),
+      amount: insurancePremium,
+    });
+  }
   for (const l of pricing.otherExpenses) {
     if (!num(l.amount) && !l.label.trim()) continue;
     extraRows.push({
@@ -197,7 +224,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
   }
 
   const extrasTotal = round2(
-    transportation + meals + guideCharges + visaFees + otherExpensesTotal
+    transportation + meals + guideCharges + visaFees + insurancePremium + otherExpensesTotal
   );
   const subtotal = round2(
     flightsTotal + hotelsTotal + activitiesTotal + extrasTotal
@@ -239,6 +266,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
     meals,
     guideCharges,
     visaFees,
+    insurancePremium,
     otherExpensesTotal,
     extrasTotal,
     subtotal,

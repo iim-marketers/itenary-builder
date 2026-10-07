@@ -5,12 +5,15 @@ import {
   makeDayItem,
   makeFlight,
   makeHotel,
+  makeInsurance,
+  makeInsured,
   makeItinerary,
-  makeLineItem,
   makeVisa,
   makeVisaDocument,
+  standardBenefits,
 } from "@/lib/defaults";
 import { addDays, toISODate } from "@/lib/format";
+import { DEFAULT_CLAIM_STEPS, DEFAULT_EXCLUSIONS } from "@/lib/insurance";
 import type { Itinerary } from "@/lib/types";
 import type { SamplePhoto } from "./shared";
 
@@ -455,6 +458,53 @@ export function makeBaliSample(): Itinerary {
       ],
       showApplicants: true,
     }),
+    insurance: makeInsurance({
+      mode: "included",
+      scope: "international",
+      provider: "Suraksha General Insurance",
+      planName: "Asia Explorer Silver",
+      policyType: "individual",
+      coverageRegion: "Asia (excluding Japan)",
+      sumInsured: "USD 50,000",
+      startDate: start,
+      endDate: d(5),
+      premiumPerPerson: 2700,
+      pax: 2,
+      addToPricing: true,
+      benefits: standardBenefits("international"),
+      exclusions: [
+        ...DEFAULT_EXCLUSIONS,
+        "Surfing and scuba diving, unless the adventure add-on is bought before departure",
+      ],
+      assistancePhone: "+91 22 6800 4400",
+      assistanceEmail: "travelclaims@suraksha.example",
+      claimSteps: [...DEFAULT_CLAIM_STEPS],
+      notes: [
+        "This page is a summary. The policy wording issued by the insurer is the final word on what is and is not covered.",
+        "Planning to surf or dive in Seminyak? Tell us at least a week before departure so we can add adventure cover.",
+        "Hospitals in Ubud and Seminyak accept cashless admission through the assistance line — call them first.",
+        "Carry a printed copy of the policy schedule and save the assistance number on your phone.",
+      ],
+      travellers: [
+        makeInsured({
+          fullName: "ANANYA IYER",
+          dateOfBirth: "1991-03-14",
+          passportNumber: "Z4821937",
+          nominee: "Karthik Iyer (spouse)",
+          certificateNumber: "SGI-TRV-26-118834",
+          status: "issued",
+        }),
+        makeInsured({
+          fullName: "KARTHIK IYER",
+          dateOfBirth: "1989-11-02",
+          passportNumber: "W7710452",
+          nominee: "Ananya Iyer (spouse)",
+          preExistingConditions: "Mild asthma, managed with an inhaler",
+          status: "proposal-submitted",
+        }),
+      ],
+      showTravellers: true,
+    }),
     pricing: {
       ...base.pricing,
       transportation: 18500,
@@ -463,9 +513,7 @@ export function makeBaliSample(): Itinerary {
       mealsNote: "Two included lunches and one seafood dinner",
       guideCharges: 4500,
       guideChargesNote: "English-speaking guide, full-day rate",
-      otherExpenses: [
-        makeLineItem({ label: "Travel insurance (2 pax)", amount: 5400 }),
-      ],
+      otherExpenses: [],
       serviceChargeMode: "percent",
       serviceChargeValue: 5,
       discountMode: "flat",
@@ -474,6 +522,12 @@ export function makeBaliSample(): Itinerary {
       taxLabel: "GST",
       taxPercent: 5,
       advancePaid: 100000,
+    },
+    content: {
+      ...base.content,
+      exclusions: base.content.exclusions.map((e) =>
+        e.startsWith("Travel insurance") ? "Personal expenses, tips and gratuities" : e
+      ),
     },
   };
 }

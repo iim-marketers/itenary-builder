@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import {
   makeActivity,
   makeApplicant,
+  makeBenefit,
   makeDay,
   makeDayItem,
   makeFlight,
   makeHotel,
+  makeInsured,
   makeItinerary,
   makeLineItem,
   makeVisaDocument,
@@ -22,6 +24,9 @@ import type {
   Flight,
   Hotel,
   ID,
+  InsuranceBenefit,
+  InsuranceInfo,
+  InsuredTraveller,
   Itinerary,
   ItineraryDay,
   LineItem,
@@ -81,6 +86,16 @@ type Action =
   | { type: "applicant/remove"; id: ID }
   | { type: "applicant/duplicate"; id: ID }
   | { type: "applicant/move"; id: ID; delta: number }
+  | { type: "insurance/patch"; patch: Partial<InsuranceInfo> }
+  | { type: "benefit/add"; benefit?: Partial<InsuranceBenefit> }
+  | { type: "benefit/patch"; id: ID; patch: Partial<InsuranceBenefit> }
+  | { type: "benefit/remove"; id: ID }
+  | { type: "benefit/move"; id: ID; delta: number }
+  | { type: "insured/add"; travellers?: Partial<InsuredTraveller>[] }
+  | { type: "insured/patch"; id: ID; patch: Partial<InsuredTraveller> }
+  | { type: "insured/remove"; id: ID }
+  | { type: "insured/duplicate"; id: ID }
+  | { type: "insured/move"; id: ID; delta: number }
   | { type: "expense/add" }
   | { type: "expense/patch"; id: ID; patch: Partial<LineItem> }
   | { type: "expense/remove"; id: ID };
@@ -419,6 +434,86 @@ function reducer(state: Itinerary, action: Action): Itinerary {
         visa: {
           ...state.visa,
           applicants: moveById(state.visa.applicants, action.id, action.delta),
+        },
+      };
+
+    /* ---------------------------------------------------------- insurance */
+    case "insurance/patch":
+      return { ...state, insurance: { ...state.insurance, ...action.patch } };
+    case "benefit/add":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          benefits: [...state.insurance.benefits, makeBenefit(action.benefit)],
+        },
+      };
+    case "benefit/patch":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          benefits: patchById(state.insurance.benefits, action.id, action.patch),
+        },
+      };
+    case "benefit/remove":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          benefits: state.insurance.benefits.filter((b) => b.id !== action.id),
+        },
+      };
+    case "benefit/move":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          benefits: moveById(state.insurance.benefits, action.id, action.delta),
+        },
+      };
+    case "insured/add": {
+      const specs = action.travellers?.length ? action.travellers : [{}];
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          travellers: [...state.insurance.travellers, ...specs.map((t) => makeInsured(t))],
+        },
+      };
+    }
+    case "insured/patch":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          travellers: patchById(state.insurance.travellers, action.id, action.patch),
+        },
+      };
+    case "insured/remove":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          travellers: state.insurance.travellers.filter((t) => t.id !== action.id),
+        },
+      };
+    case "insured/duplicate":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          travellers: duplicateById(state.insurance.travellers, action.id, (t) =>
+            makeInsured({ ...t, id: undefined })
+          ),
+        },
+      };
+    case "insured/move":
+      return {
+        ...state,
+        insurance: {
+          ...state.insurance,
+          travellers: moveById(state.insurance.travellers, action.id, action.delta),
         },
       };
 

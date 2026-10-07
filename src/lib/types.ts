@@ -253,6 +253,76 @@ export interface VisaInfo {
   showApplicants: boolean;
 }
 
+/* ----------------------------------------------------------------- insurance */
+
+/**
+ * Who arranges the cover. `none` switches the insurance page off in the
+ * document entirely.
+ */
+export type InsuranceMode = "none" | "included" | "optional" | "self-arranged";
+
+/** Drives the standard benefit schedule and whether passports are asked for. */
+export type InsuranceScope = "international" | "domestic";
+
+export type InsurancePolicyType = "individual" | "family" | "group";
+
+export type InsuranceStatus =
+  | "details-pending"
+  | "proposal-submitted"
+  | "issued"
+  | "own-cover"
+  | "opted-out";
+
+/** One line of the schedule of benefits. */
+export interface InsuranceBenefit {
+  id: ID;
+  label: string;
+  limit: string; // free text: "USD 50,000", "₹ 1,000 per 6 hours"
+  deductible: string;
+}
+
+/** One traveller on the policy. */
+export interface InsuredTraveller {
+  id: ID;
+  fullName: string;
+  dateOfBirth: string;
+  passportNumber: string;
+  nominee: string; // "Karthik Iyer (spouse)"
+  preExistingConditions: string;
+  certificateNumber: string;
+  status: InsuranceStatus;
+}
+
+export interface InsuranceInfo {
+  mode: InsuranceMode;
+  scope: InsuranceScope;
+  provider: string;
+  planName: string;
+  policyType: InsurancePolicyType;
+  coverageRegion: string;
+  /** Free text so it can carry its own currency: "USD 50,000". */
+  sumInsured: string;
+  /** The master or group policy number, when there is one. */
+  policyNumber: string;
+  startDate: string;
+  endDate: string;
+  /** A condition of the visa (Schengen, for one) rather than just advice. */
+  requiredForVisa: boolean;
+  premiumPerPerson: number;
+  pax: number;
+  /** Folds the premium into the package total. Only applies to `included`. */
+  addToPricing: boolean;
+  benefits: InsuranceBenefit[];
+  exclusions: string[];
+  assistancePhone: string;
+  assistanceEmail: string;
+  claimSteps: string[];
+  notes: string[];
+  travellers: InsuredTraveller[];
+  /** Lists the insured travellers and their certificate numbers in the document. */
+  showTravellers: boolean;
+}
+
 /* -------------------------------------------------------------------- extras */
 
 export interface ContentBlocks {
@@ -275,6 +345,7 @@ export interface Itinerary {
   activities: Activity[];
   days: ItineraryDay[];
   visa: VisaInfo;
+  insurance: InsuranceInfo;
   pricing: PricingInput;
   content: ContentBlocks;
   createdAt: string;
@@ -298,5 +369,6 @@ export type SectionKey =
   | "activities"
   | "days"
   | "visa"
+  | "insurance"
   | "pricing"
   | "content";

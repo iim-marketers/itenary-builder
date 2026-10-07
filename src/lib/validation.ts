@@ -1,5 +1,6 @@
-import { daysBetween, isValidDate, isValidTime, toMinutes } from "./format";
+import { daysBetween, isValidDate, isValidTime, toISODate, toMinutes } from "./format";
 import { hotelNights } from "./pricing";
+import { ageOn, checkPeriod, hasPremium, isCovered } from "./insurance";
 import { checkPassport, needsVisa } from "./visa";
 import type { Itinerary, ValidationIssue } from "./types";
 
@@ -233,6 +234,79 @@ export function validateItinerary(it: Itinerary): ValidationIssue[] {
         "visa",
         `${v.applicants.length} applicant${v.applicants.length === 1 ? "" : "s"} listed for ${travellers} traveller${travellers === 1 ? "" : "s"}.`
       );
+    }
+  }
+
+  /* ------------------------------------------------------------- insurance */
+  const ins = it.insurance;
+  if (ins.mode === "none") {
+    if (v.requirement === "embassy") {
+      push("warning", "insurance", "Embassy visas usually need travel insurance — no cover is set up.");
+    }
+  } else {
+    const sells = hasPremium(ins.mode);
+    if (sells && !ins.provider.trim()) push("warning", "insurance", "No insurer named.");
+    if (!ins.sumInsured.trim()) push("warning", "insurance", "No sum insured set.");
+
+    const period = checkPeriod(ins.startDate, ins.endDate, trip.startDate, trip.endDate);
+    if (period.level === "error") push("error", "insurance", period.message);
+    if (period.level === "unknown" && ins.mode !== "self-arranged") {
+      push("warning", "insurance", "The policy period is not set.");
+    }
+
+    if (ins.benefits.length === 0) {
+      push("warning", "insurance", "No benefits listed in the schedule of cover.");
+    }
+    ins.benefits.forEach((b, i) => {
+      if (!b.label.trim()) push("warning", "insurance", `Benefit ${i + 1} has no description.`);
+    });
+    if (!ins.assistancePhone.trim() && ins.mode !== "self-arranged") {
+      push("warning", "insurance", "No 24×7 emergency assistance number.");
+    }
+
+    if (sells) {
+      if (ins.premiumPerPerson < 0) push("error", "insurance", "The premium cannot be negative.");
+      if (ins.pax < 0) push("error", "insurance", "The number of insured travellers cannot be negative.");
+      if (ins.premiumPerPerson === 0) push("warning", "insurance", "No premium set.");
+    }
+    if (
+      ins.mode === "included" &&
+      it.content.exclusions.some((e) => /insurance/i.test(e))
+    ) {
+      push(
+        "warning",
+        "insurance",
+        "Insurance is included, but the package exclusions on Notes & terms still list it."
+      );
+    }
+
+    ins.travellers.forEach((t, i) => {
+      const tag = t.fullName.trim() || `Traveller ${i + 1}`;
+      if (!t.fullName.trim()) push("error", "insurance", `Insured traveller ${i + 1}: a name is required.`);
+      if (t.status === "issued" && !t.certificateNumber.trim()) {
+        push("warning", "insurance", `${tag}: policy issued but no certificate number recorded.`);
+      }
+      if (t.status === "opted-out" && ins.requiredForVisa) {
+        push("error", "insurance", `${tag}: opted out, but insurance is required for the visa.`);
+      }
+      const age = ageOn(t.dateOfBirth, trip.startDate);
+      if (age !== null && age > 70) {
+        push("warning", "insurance", `${tag}: over 70 — check the plan's age limit.`);
+      }
+    });
+    if (ins.travellers.length > 0 && ins.travellers.length !== travellers) {
+      push(
+        "warning",
+        "insurance",
+        `${ins.travellers.length} insured traveller${ins.travellers.length === 1 ? "" : "s"} listed for ${travellers} on the trip.`
+      );
+    }
+    if (
+      isValidDate(trip.startDate) &&
+      (daysBetween(toISODate(new Date()), trip.startDate) ?? 99) <= 7 &&
+      ins.travellers.some((t) => !isCovered(t.status) && t.status !== "opted-out")
+    ) {
+      push("warning", "insurance", "Departure is within a week and some policies are not issued yet.");
     }
   }
 

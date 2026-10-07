@@ -16,6 +16,8 @@ import {
   flightTotal,
   hotelNights,
   hotelTotal,
+  insuranceInPackage,
+  insuranceTotal,
   visaFeePerPerson,
   visaTotal,
   type PricingBreakdown,
@@ -28,8 +30,22 @@ import {
   statusMeta,
   VISA_ENTRIES,
 } from "./visa";
+import {
+  ageOn,
+  insuranceStatusMeta,
+  modeBlurb,
+  modeLabel,
+  periodLabel,
+  POLICY_TYPES,
+} from "./insurance";
 import { BRAND } from "./brand";
-import type { Itinerary, ItineraryDay, ItineraryImage, VisaInfo } from "./types";
+import type {
+  InsuranceInfo,
+  Itinerary,
+  ItineraryDay,
+  ItineraryImage,
+  VisaInfo,
+} from "./types";
 
 /**
  * A flattened, presentation-ready view of the itinerary. Both the on-screen
@@ -70,6 +86,8 @@ export interface DocModel {
   days: DayView[];
   /** Null when no visa section applies (a domestic trip). */
   visa: VisaView | null;
+  /** Null when the trip carries no insurance section. */
+  insurance: InsuranceView | null;
   pricing: PricingBreakdown;
   currency: Itinerary["trip"]["currency"];
   inclusions: string[];
@@ -235,6 +253,101 @@ function buildVisaView(v: VisaInfo, currency: Itinerary["trip"]["currency"]): Vi
           expiry: formatDate(a.passportExpiry, "medium"),
           status: statusMeta(a.status).label,
         }))
+      : [],
+  };
+}
+
+export interface InsuranceView {
+  mode: string;
+  /** True when the guest buys their own cover, so limits are minimums. */
+  minimumsOnly: boolean;
+  requiredForVisa: boolean;
+  blurb: string;
+  facts: { label: string; value: string }[];
+  benefits: { id: string; label: string; limit: string; deductible: string }[];
+  hasDeductibles: boolean;
+  assistance: { phone: string; email: string };
+  exclusions: string[];
+  claimSteps: string[];
+  notes: string[];
+  travellers: {
+    id: string;
+    name: string;
+    age: string;
+    nominee: string;
+    certificate: string;
+    status: string;
+  }[];
+}
+
+function buildInsuranceView(
+  ins: InsuranceInfo,
+  trip: Itinerary["trip"]
+): InsuranceView | null {
+  if (ins.mode === "none") return null;
+  const money = (n: number) => formatMoney(n, trip.currency);
+  const own = ins.mode === "self-arranged";
+  const facts: { label: string; value: string }[] = [];
+  const add = (label: string, value: string) => {
+    if (value.trim()) facts.push({ label, value: value.trim() });
+  };
+
+  if (!own) {
+    add("Insurer", ins.provider);
+    add("Plan", ins.planName);
+    add("Policy type", POLICY_TYPES.find((p) => p.value === ins.policyType)?.label ?? "");
+  }
+  add("Coverage", ins.coverageRegion);
+  add(own ? "Minimum sum insured" : "Sum insured", ins.sumInsured);
+  add(own ? "Cover needed for" : "Policy period", periodLabel(ins.startDate, ins.endDate));
+  if (!own) add("Policy number", ins.policyNumber);
+
+  const total = insuranceTotal(ins);
+  if (ins.premiumPerPerson > 0 && total > 0) {
+    add("Premium per person", money(ins.premiumPerPerson));
+    add(
+      "Premium",
+      ins.mode === "optional"
+        ? `${money(total)} for ${pluralise(ins.pax, "traveller")} — optional, not in the package price`
+        : insuranceInPackage(ins)
+          ? `${money(total)} — included in the package price`
+          : `${money(total)} — payable separately`
+    );
+  }
+
+  const benefits = ins.benefits
+    .filter((b) => b.label.trim())
+    .map((b) => ({
+      id: b.id,
+      label: b.label.trim(),
+      limit: b.limit.trim() || "—",
+      deductible: b.deductible.trim(),
+    }));
+
+  return {
+    mode: modeLabel(ins.mode),
+    minimumsOnly: own,
+    requiredForVisa: ins.requiredForVisa,
+    blurb: modeBlurb(ins.mode, ins.requiredForVisa),
+    facts,
+    benefits,
+    hasDeductibles: benefits.some((b) => b.deductible),
+    assistance: { phone: ins.assistancePhone.trim(), email: ins.assistanceEmail.trim() },
+    exclusions: ins.exclusions,
+    claimSteps: ins.claimSteps,
+    notes: ins.notes,
+    travellers: ins.showTravellers
+      ? ins.travellers.map((t, i) => {
+          const age = ageOn(t.dateOfBirth, trip.startDate);
+          return {
+            id: t.id,
+            name: t.fullName.trim() || `Traveller ${i + 1}`,
+            age: age === null ? "—" : String(age),
+            nominee: t.nominee.trim() || "—",
+            certificate: t.certificateNumber.trim() || "—",
+            status: insuranceStatusMeta(t.status).label,
+          };
+        })
       : [],
   };
 }
@@ -464,6 +577,7 @@ export function buildDocModel(it: Itinerary): DocModel {
     activities,
     days,
     visa: buildVisaView(it.visa, trip.currency),
+    insurance: buildInsuranceView(it.insurance, trip),
     pricing,
     currency: trip.currency,
     inclusions: content.inclusions,
