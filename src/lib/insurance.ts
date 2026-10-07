@@ -255,9 +255,16 @@ export function ageNote(age: number | null): { level: "ok" | "warning"; message:
   return { level: "ok", message: `${age} at departure.` };
 }
 
-/** "12 Oct 2026 – 18 Oct 2026 · 7 days", or "" when the dates are incomplete. */
 export function periodLabel(start: string, end: string): string {
   const days = policyDays(start, end);
-  if (days === null) return "";
-  return `${formatDate(start, "medium")} – ${formatDate(end, "medium")} · ${days} day${days === 1 ? "" : "s"}`;
+  const a = parseDate(start);
+  const b = parseDate(end);
+  if (days === null || !a || !b) return "";
+  const from =
+    a.getFullYear() !== b.getFullYear()
+      ? formatDate(start, "medium")
+      : a.getMonth() !== b.getMonth()
+        ? formatDate(start, "medium").replace(/\s+\d{4}$/, "")
+        : String(a.getDate()).padStart(2, "0");
+  return `${from} – ${formatDate(end, "medium")} · ${days} day${days === 1 ? "" : "s"}`;
 }

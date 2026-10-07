@@ -24,4 +24,6 @@ export const BRAND = {
    * JPG into `public/brand/` and point at it, e.g. "/brand/logo.png".
    */
   logoSrc: null as string | null,
+
+  markSrc: "/logo/travelmaxx-mark.png" as string | null,
 } as const;

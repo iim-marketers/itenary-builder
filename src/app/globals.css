@@ -190,6 +190,18 @@
   gap: 24px;
 }
 
+.doc-cover-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.doc-cover-brandmark {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
 .doc-cover-logo {
   max-height: 56px;
   max-width: 180px;

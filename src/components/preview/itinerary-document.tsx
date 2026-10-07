@@ -28,18 +28,24 @@ export function ItineraryDocument({ doc }: { doc: DocModel }) {
     <Page key="cover" cover>
       <div className="doc-cover-band">
         <div className="doc-cover-brandrow">
-          <div>
-            {doc.logo ? (
+          <div className="doc-cover-brand">
+            {doc.mark && !doc.logo ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={doc.logo} alt="" className="doc-cover-logo" />
-            ) : (
-              <div className="doc-cover-mark">{doc.companyName}</div>
-            )}
-            {doc.tagline ? (
-              <div className="doc-cover-tagline" style={{ marginTop: 6 }}>
-                {doc.tagline}
-              </div>
+              <img src={doc.mark} alt="" className="doc-cover-brandmark" />
             ) : null}
+            <div>
+              {doc.logo ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={doc.logo} alt="" className="doc-cover-logo" />
+              ) : (
+                <div className="doc-cover-mark">{doc.companyName}</div>
+              )}
+              {doc.tagline ? (
+                <div className="doc-cover-tagline" style={{ marginTop: 6 }}>
+                  {doc.tagline}
+                </div>
+              ) : null}
+            </div>
           </div>
           <div className="doc-cover-ref">
             {doc.reference ? <div>Ref · {doc.reference}</div> : null}

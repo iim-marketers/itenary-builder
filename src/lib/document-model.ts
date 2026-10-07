@@ -56,6 +56,7 @@ export interface DocModel {
   companyName: string;
   tagline: string;
   logo: string | null;
+  mark: string | null;
   contactLines: string[];
   companyAddress: string;
   gstin: string;
@@ -545,6 +546,7 @@ export function buildDocModel(it: Itinerary): DocModel {
     companyName: BRAND.name,
     tagline: BRAND.tagline,
     logo: BRAND.logoSrc,
+    mark: BRAND.markSrc,
     contactLines,
     companyAddress: BRAND.address.trim(),
     gstin: BRAND.gstin.trim(),

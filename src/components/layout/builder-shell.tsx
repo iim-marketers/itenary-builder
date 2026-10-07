@@ -51,8 +51,13 @@ const TABS: {
   { key: "hotels", label: "Hotels", short: "Hotels", icon: Hotel },
   { key: "activities", label: "Activities", short: "Activities", icon: Camera },
   { key: "days", label: "Day-by-day", short: "Days", icon: CalendarRange },
-  { key: "visa", label: "Visa details", short: "Visa", icon: Stamp },
-  { key: "insurance", label: "Travel insurance", short: "Insurance", icon: Umbrella },
+  { key: "visa", label: "Visa", short: "Visa", icon: Stamp },
+  {
+    key: "insurance",
+    label: "Travel insurance",
+    short: "Insurance",
+    icon: Umbrella,
+  },
   { key: "pricing", label: "Pricing", short: "Pricing", icon: ReceiptText },
   { key: "content", label: "Notes & terms", short: "Terms", icon: ScrollText },
 ];
