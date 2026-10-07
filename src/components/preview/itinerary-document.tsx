@@ -597,6 +597,128 @@ export function ItineraryDocument({ doc }: { doc: DocModel }) {
     );
   }
 
+  /* -------------------------------------------------------------- visa */
+  if (doc.visa) {
+    const v = doc.visa;
+    push(
+      <Page key="visa" doc={doc}>
+        <SectionHead num={sec("Visa")} title="Visa & travel documents" />
+
+        <div className="doc-card doc-card-accent">
+          <span className="doc-pill">{v.requirement}</span>
+          <p className="doc-lead" style={{ margin: "10px 0 0" }}>
+            {v.blurb}
+          </p>
+          {v.facts.length ? (
+            <div className="doc-grid-3" style={{ marginTop: 14, gap: "12px 20px" }}>
+              {v.facts.map((f) => (
+                <KV key={f.label} label={f.label} value={f.value} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {v.documents.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 16,
+                marginBottom: 10,
+              }}
+            >
+              <div className="doc-eyebrow">Documents we need from you</div>
+              {v.dueBy ? (
+                <div style={{ fontSize: 11, color: "var(--doc-muted)" }}>
+                  Please send by <span className="doc-strong">{v.dueBy}</span>
+                </div>
+              ) : null}
+            </div>
+            <ul className="doc-list doc-list--box">
+              {v.documents.map((d) => (
+                <li key={d.id}>
+                  {d.label}
+                  {d.mandatory ? null : <span className="doc-tag">Optional</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {v.submission || v.photoSpecs ? (
+          <div
+            className={v.submission && v.photoSpecs ? "doc-grid-2" : undefined}
+            style={{ marginTop: 18 }}
+          >
+            {v.submission ? (
+              <div className="doc-card" style={{ background: "var(--doc-tint)", border: "none" }}>
+                <div className="doc-eyebrow">How to send them</div>
+                <p style={{ margin: "6px 0 0", fontSize: 11.5, color: "var(--doc-muted)" }}>
+                  {v.submission}
+                </p>
+              </div>
+            ) : null}
+            {v.photoSpecs ? (
+              <div className="doc-card" style={{ background: "var(--doc-tint)", border: "none" }}>
+                <div className="doc-eyebrow">Photograph specifications</div>
+                <p style={{ margin: "6px 0 0", fontSize: 11.5, color: "var(--doc-muted)" }}>
+                  {v.photoSpecs}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {v.applicants.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div className="doc-eyebrow" style={{ marginBottom: 8 }}>
+              Applicants
+            </div>
+            <table className="doc-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Nationality</th>
+                  <th>Passport</th>
+                  <th>Expiry</th>
+                  <th className="doc-num">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {v.applicants.map((a) => (
+                  <tr key={a.id}>
+                    <td className="doc-strong">{a.name}</td>
+                    <td style={{ color: "var(--doc-muted)" }}>{a.nationality}</td>
+                    <td style={{ color: "var(--doc-muted)", fontVariantNumeric: "tabular-nums" }}>
+                      {a.passport}
+                    </td>
+                    <td style={{ color: "var(--doc-muted)" }}>{a.expiry}</td>
+                    <td className="doc-num">{a.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {v.notes.length ? (
+          <div style={{ marginTop: 22 }}>
+            <div className="doc-eyebrow" style={{ marginBottom: 10 }}>
+              Please note
+            </div>
+            <ul className="doc-list">
+              {v.notes.map((l, i) => (
+                <li key={`${i}-${l}`}>{l}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </Page>
+    );
+  }
+
   /* ----------------------------------------------------------- pricing */
   const p = doc.pricing;
   push(

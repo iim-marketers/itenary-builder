@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -345,5 +346,29 @@ export function FieldGrid({
     <div className={cn("grid grid-cols-1 gap-3", map[cols], className)}>
       {children}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------- ToggleRow */
+
+export function ToggleRow({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border p-3">
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{label}</span>
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </label>
   );
 }

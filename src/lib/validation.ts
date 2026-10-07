@@ -1,5 +1,6 @@
 import { daysBetween, isValidDate, isValidTime, toMinutes } from "./format";
 import { hotelNights } from "./pricing";
+import { checkPassport, needsVisa } from "./visa";
 import type { Itinerary, ValidationIssue } from "./types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -174,6 +175,66 @@ export function validateItinerary(it: Itinerary): ValidationIssue[] {
       }
     });
   });
+
+  /* ------------------------------------------------------------------ visa */
+  const v = it.visa;
+  if (v.requirement !== "not-applicable") {
+    if (!v.country.trim()) push("error", "visa", "Name the country the visa details are for.");
+    if (v.documents.length === 0) {
+      push("warning", "visa", "No documents are listed for the guests to provide.");
+    }
+    v.documents.forEach((d, i) => {
+      if (!d.label.trim()) push("warning", "visa", `Document ${i + 1} has no description.`);
+    });
+
+    if (needsVisa(v.requirement)) {
+      if (!v.visaType.trim()) push("warning", "visa", "No visa type set.");
+      if (v.feePerPerson < 0 || v.serviceFeePerPerson < 0) {
+        push("error", "visa", "Visa fees cannot be negative.");
+      }
+      if (v.pax < 0) push("error", "visa", "The number of applicants cannot be negative.");
+      if (v.addToPricing && v.feePerPerson + v.serviceFeePerPerson > 0 && v.pax === 0) {
+        push("warning", "visa", "Visa fees are set but the applicant count is zero.");
+      }
+      if (!isValidDate(v.documentsDueBy)) {
+        push("warning", "visa", "No deadline set for the guests to submit their documents.");
+      }
+    }
+    if (isValidDate(v.documentsDueBy) && isValidDate(trip.startDate)) {
+      const lead = daysBetween(v.documentsDueBy, trip.startDate);
+      if (lead !== null && lead < 0) {
+        push("error", "visa", "The document deadline falls after the trip starts.");
+      } else if (lead !== null && needsVisa(v.requirement) && lead < 7) {
+        push("warning", "visa", "The document deadline leaves under a week before departure.");
+      }
+    }
+
+    v.applicants.forEach((a, i) => {
+      const tag = a.fullName.trim() || `Applicant ${i + 1}`;
+      if (!a.fullName.trim()) push("error", "visa", `Applicant ${i + 1}: name as on passport is required.`);
+      if (a.passportExpiry && !isValidDate(a.passportExpiry)) {
+        push("error", "visa", `${tag}: the passport expiry date is not valid.`);
+      }
+      const check = checkPassport(a.passportExpiry, trip.endDate);
+      if (check.level === "error") push("error", "visa", `${tag}: passport expires before the trip ends.`);
+      if (check.level === "warning") {
+        push("warning", "visa", `${tag}: passport is valid for under 6 months after the return date.`);
+      }
+      // Before the documents arrive a blank passport number is expected.
+      const filed = a.status !== "awaiting-documents" && a.status !== "not-required";
+      if (needsVisa(v.requirement) && filed && a.passportNumber.trim() === "") {
+        push("warning", "visa", `${tag}: no passport number recorded.`);
+      }
+      if (a.status === "rejected") push("warning", "visa", `${tag}: the visa was rejected.`);
+    });
+    if (v.applicants.length > 0 && v.applicants.length !== travellers) {
+      push(
+        "warning",
+        "visa",
+        `${v.applicants.length} applicant${v.applicants.length === 1 ? "" : "s"} listed for ${travellers} traveller${travellers === 1 ? "" : "s"}.`
+      );
+    }
+  }
 
   /* --------------------------------------------------------------- pricing */
   const p = it.pricing;

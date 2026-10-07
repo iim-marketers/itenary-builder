@@ -1,5 +1,6 @@
 import { daysBetween, toMinutes } from "./format";
-import type { Activity, Flight, Hotel, Itinerary } from "./types";
+import { needsVisa } from "./visa";
+import type { Activity, Flight, Hotel, Itinerary, VisaInfo } from "./types";
 
 const num = (v: unknown): number => {
   const n = typeof v === "number" ? v : Number(v);
@@ -38,6 +39,17 @@ export function activityTotal(a: Activity): number {
   );
 }
 
+/** Embassy fee plus service fee, per applicant. */
+export function visaFeePerPerson(v: VisaInfo): number {
+  return round2(num(v.feePerPerson) + num(v.serviceFeePerPerson));
+}
+
+/** Visa cost for the whole party, or 0 when no visa is needed. */
+export function visaTotal(v: VisaInfo): number {
+  if (!needsVisa(v.requirement)) return 0;
+  return round2(visaFeePerPerson(v) * Math.max(0, num(v.pax)));
+}
+
 /** Flight duration in minutes from the date/time pair, or null when incomplete. */
 export function flightDurationMinutes(f: Flight): number | null {
   const dep = toMinutes(f.departureDate, f.departureTime);
@@ -69,6 +81,8 @@ export interface PricingBreakdown {
   transportation: number;
   meals: number;
   guideCharges: number;
+  /** Visa fees folded into the package — 0 unless the admin opted in. */
+  visaFees: number;
   otherExpensesTotal: number;
   extrasTotal: number;
   subtotal: number;
@@ -132,6 +146,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
   const transportation = round2(num(pricing.transportation));
   const meals = round2(num(pricing.meals));
   const guideCharges = round2(num(pricing.guideCharges));
+  const visaFees = it.visa.addToPricing ? visaTotal(it.visa) : 0;
   const otherExpensesTotal = round2(
     pricing.otherExpenses.reduce((s, l) => s + num(l.amount), 0)
   );
@@ -161,6 +176,17 @@ export function computePricing(it: Itinerary): PricingBreakdown {
       amount: guideCharges,
     });
   }
+  if (visaFees) {
+    const pax = Math.max(0, num(it.visa.pax));
+    extraRows.push({
+      key: "visa",
+      label: it.visa.visaType.trim() || "Visa fees",
+      detail: `${it.visa.country.trim() ? `${it.visa.country.trim()} · ` : ""}${pax} applicant${
+        pax === 1 ? "" : "s"
+      }`,
+      amount: visaFees,
+    });
+  }
   for (const l of pricing.otherExpenses) {
     if (!num(l.amount) && !l.label.trim()) continue;
     extraRows.push({
@@ -171,7 +197,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
   }
 
   const extrasTotal = round2(
-    transportation + meals + guideCharges + otherExpensesTotal
+    transportation + meals + guideCharges + visaFees + otherExpensesTotal
   );
   const subtotal = round2(
     flightsTotal + hotelsTotal + activitiesTotal + extrasTotal
@@ -212,6 +238,7 @@ export function computePricing(it: Itinerary): PricingBreakdown {
     transportation,
     meals,
     guideCharges,
+    visaFees,
     otherExpensesTotal,
     extrasTotal,
     subtotal,

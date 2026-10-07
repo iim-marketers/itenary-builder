@@ -1,11 +1,14 @@
 import {
   makeActivity,
+  makeApplicant,
   makeDay,
   makeDayItem,
   makeFlight,
   makeHotel,
   makeItinerary,
   makeLineItem,
+  makeVisa,
+  makeVisaDocument,
 } from "@/lib/defaults";
 import { addDays, toISODate } from "@/lib/format";
 import type { Itinerary } from "@/lib/types";
@@ -385,6 +388,73 @@ export function makeBaliSample(): Itinerary {
         ],
       }),
     ],
+    visa: makeVisa({
+      requirement: "on-arrival",
+      country: "Indonesia",
+      visaType: "e-Visa on Arrival (e-VOA)",
+      entries: "single",
+      validity: "90 days from issue",
+      maxStay: "30 days, extendable once by 30 days",
+      processingTime: "1–2 working days online",
+      applyVia: "Online at evisa.imigrasi.go.id, filed by our visa desk",
+      documentsDueBy: d(-14),
+      feePerPerson: 2700,
+      serviceFeePerPerson: 1600,
+      pax: 2,
+      addToPricing: true,
+      documents: [
+        makeVisaDocument({
+          label: "Original passport valid for at least 6 months beyond the return date, with 2 blank pages",
+        }),
+        makeVisaDocument({ label: "Clear colour scan of the passport front and back pages" }),
+        makeVisaDocument({ label: "Recent digital photograph (JPEG, white background, no glasses)" }),
+        makeVisaDocument({ label: "Confirmed return flight tickets (we will share these with you)" }),
+        makeVisaDocument({ label: "Hotel booking confirmations for the entire stay (we will share these with you)" }),
+        makeVisaDocument({ label: "PAN card copy, for the foreign-exchange paperwork" }),
+        makeVisaDocument({
+          label: "Proof of sufficient funds (recent bank statement or credit card)",
+          mandatory: false,
+        }),
+        makeVisaDocument({ label: "Travel insurance covering the full trip", mandatory: false }),
+      ],
+      submissionInstructions:
+        "Email clear scans of every document to our visa desk, or share them on WhatsApp with Rhea Menon. No originals are needed — the e-VOA is filed online and emailed to you.",
+      photoSpecs:
+        "Digital photo, at least 400 × 600 pixels, plain white background, taken within the last 6 months. Face centred, eyes open, no glasses or headwear.",
+      notes: [
+        "Print the e-VOA approval for each traveller and carry it with your passport — immigration in Denpasar may ask to see it.",
+        "Bali charges a one-time tourist levy of IDR 150,000 per person. We will send you the payment link before departure.",
+        "Complete Indonesia's online arrival and customs declaration in the 3 days before landing; we will remind you.",
+        "The grant of a visa is at the sole discretion of the Indonesian immigration authority. We cannot influence the decision or the processing time.",
+        "Visa fees are non-refundable once the application has been filed, whatever the outcome.",
+        "Names on the flight tickets must match the passport exactly — please check the spelling.",
+      ],
+      applicants: [
+        makeApplicant({
+          fullName: "ANANYA IYER",
+          nationality: "Indian",
+          dateOfBirth: "1991-03-14",
+          passportNumber: "Z4821937",
+          passportIssueDate: "2019-06-11",
+          passportExpiry: addDays(start, 365 * 3),
+          status: "approved",
+          visaNumber: "EVOA-2026-0481193",
+          notes: "Approval emailed to the guest.",
+        }),
+        makeApplicant({
+          fullName: "KARTHIK IYER",
+          nationality: "Indian",
+          dateOfBirth: "1989-11-02",
+          passportNumber: "W7710452",
+          passportIssueDate: "2021-01-20",
+          passportExpiry: addDays(start, 365 * 5),
+          status: "submitted",
+          visaNumber: "APP-ID 7731-2209",
+          notes: "Old passport scan attached as well.",
+        }),
+      ],
+      showApplicants: true,
+    }),
     pricing: {
       ...base.pricing,
       transportation: 18500,
@@ -394,7 +464,6 @@ export function makeBaliSample(): Itinerary {
       guideCharges: 4500,
       guideChargesNote: "English-speaking guide, full-day rate",
       otherExpenses: [
-        makeLineItem({ label: "Indonesia visa on arrival (2 pax)", amount: 8600 }),
         makeLineItem({ label: "Travel insurance (2 pax)", amount: 5400 }),
       ],
       serviceChargeMode: "percent",

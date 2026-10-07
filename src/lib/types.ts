@@ -184,6 +184,75 @@ export interface PricingInput {
   advancePaid: number;
 }
 
+/* ---------------------------------------------------------------------- visa */
+
+/**
+ * How the destination admits the travellers. `not-applicable` (a domestic
+ * trip) switches the visa page off in the document entirely.
+ */
+export type VisaRequirement =
+  | "not-applicable"
+  | "visa-free"
+  | "on-arrival"
+  | "e-visa"
+  | "embassy";
+
+export type VisaEntry = "single" | "double" | "multiple";
+
+export type VisaStatus =
+  | "awaiting-documents"
+  | "documents-received"
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "not-required";
+
+/** One document the guest is asked to provide. */
+export interface VisaDocument {
+  id: ID;
+  label: string;
+  mandatory: boolean;
+}
+
+/** One traveller's passport and application details. */
+export interface VisaApplicant {
+  id: ID;
+  fullName: string; // exactly as printed on the passport
+  nationality: string;
+  dateOfBirth: string;
+  passportNumber: string;
+  passportIssueDate: string;
+  passportExpiry: string;
+  status: VisaStatus;
+  visaNumber: string;
+  notes: string;
+}
+
+export interface VisaInfo {
+  requirement: VisaRequirement;
+  country: string;
+  visaType: string;
+  entries: VisaEntry;
+  validity: string;
+  maxStay: string;
+  processingTime: string;
+  applyVia: string;
+  /** The date the guests must hand their documents in by. */
+  documentsDueBy: string;
+  feePerPerson: number;
+  serviceFeePerPerson: number;
+  pax: number;
+  /** Folds the visa fees into the package total on the pricing page. */
+  addToPricing: boolean;
+  documents: VisaDocument[];
+  submissionInstructions: string;
+  photoSpecs: string;
+  notes: string[];
+  applicants: VisaApplicant[];
+  /** Lists the applicants (with masked passport numbers) in the document. */
+  showApplicants: boolean;
+}
+
 /* -------------------------------------------------------------------- extras */
 
 export interface ContentBlocks {
@@ -205,6 +274,7 @@ export interface Itinerary {
   hotels: Hotel[];
   activities: Activity[];
   days: ItineraryDay[];
+  visa: VisaInfo;
   pricing: PricingInput;
   content: ContentBlocks;
   createdAt: string;
@@ -227,5 +297,6 @@ export type SectionKey =
   | "hotels"
   | "activities"
   | "days"
+  | "visa"
   | "pricing"
   | "content";

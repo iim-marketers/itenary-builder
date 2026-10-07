@@ -2,6 +2,7 @@ import {
   DAY_ITEM_KINDS,
   daysBetween,
   formatDate,
+  formatMoney,
   formatDuration,
   formatTime,
   isValidTime,
@@ -15,10 +16,20 @@ import {
   flightTotal,
   hotelNights,
   hotelTotal,
+  visaFeePerPerson,
+  visaTotal,
   type PricingBreakdown,
 } from "./pricing";
+import {
+  maskPassport,
+  needsVisa,
+  requirementBlurb,
+  requirementLabel,
+  statusMeta,
+  VISA_ENTRIES,
+} from "./visa";
 import { BRAND } from "./brand";
-import type { Itinerary, ItineraryDay, ItineraryImage } from "./types";
+import type { Itinerary, ItineraryDay, ItineraryImage, VisaInfo } from "./types";
 
 /**
  * A flattened, presentation-ready view of the itinerary. Both the on-screen
@@ -57,6 +68,8 @@ export interface DocModel {
   hotels: HotelView[];
   activities: ActivityView[];
   days: DayView[];
+  /** Null when no visa section applies (a domestic trip). */
+  visa: VisaView | null;
   pricing: PricingBreakdown;
   currency: Itinerary["trip"]["currency"];
   inclusions: string[];
@@ -145,6 +158,85 @@ export interface DayView {
     description: string;
     images: ItineraryImage[];
   }[];
+}
+
+export interface VisaView {
+  requirement: string;
+  country: string;
+  blurb: string;
+  facts: { label: string; value: string }[];
+  documents: { id: string; label: string; mandatory: boolean }[];
+  dueBy: string;
+  submission: string;
+  photoSpecs: string;
+  notes: string[];
+  applicants: {
+    id: string;
+    name: string;
+    nationality: string;
+    passport: string;
+    expiry: string;
+    status: string;
+  }[];
+}
+
+function buildVisaView(v: VisaInfo, currency: Itinerary["trip"]["currency"]): VisaView | null {
+  if (v.requirement === "not-applicable") return null;
+  const money = (n: number) => formatMoney(n, currency);
+  const facts: { label: string; value: string }[] = [];
+  const add = (label: string, value: string) => {
+    if (value.trim()) facts.push({ label, value: value.trim() });
+  };
+
+  add("Destination", v.country);
+  if (needsVisa(v.requirement)) {
+    add("Visa type", v.visaType);
+    add("Entries", VISA_ENTRIES.find((e) => e.value === v.entries)?.label ?? "");
+    add("Validity", v.validity);
+    add("Maximum stay", v.maxStay);
+    add("Processing time", v.processingTime);
+    add("Apply via", v.applyVia);
+    const each = visaFeePerPerson(v);
+    if (each > 0) {
+      const split =
+        v.feePerPerson > 0 && v.serviceFeePerPerson > 0
+          ? ` (${money(v.feePerPerson)} visa + ${money(v.serviceFeePerPerson)} service)`
+          : "";
+      add("Fee per person", `${money(each)}${split}`);
+      add(
+        "Visa fees",
+        v.addToPricing
+          ? `${money(visaTotal(v))} — included in the package price`
+          : `${money(visaTotal(v))} — payable separately`
+      );
+    }
+  } else {
+    add("Permitted stay", v.maxStay);
+  }
+
+  return {
+    requirement: requirementLabel(v.requirement),
+    country: v.country.trim(),
+    blurb: requirementBlurb(v.requirement, v.country),
+    facts,
+    documents: v.documents
+      .filter((d) => d.label.trim())
+      .map((d) => ({ id: d.id, label: d.label.trim(), mandatory: d.mandatory })),
+    dueBy: v.documentsDueBy ? formatDate(v.documentsDueBy, "dayLong") : "",
+    submission: v.submissionInstructions.trim(),
+    photoSpecs: needsVisa(v.requirement) ? v.photoSpecs.trim() : "",
+    notes: v.notes,
+    applicants: v.showApplicants
+      ? v.applicants.map((a, i) => ({
+          id: a.id,
+          name: a.fullName.trim() || `Traveller ${i + 1}`,
+          nationality: a.nationality.trim() || "—",
+          passport: maskPassport(a.passportNumber),
+          expiry: formatDate(a.passportExpiry, "medium"),
+          status: statusMeta(a.status).label,
+        }))
+      : [],
+  };
 }
 
 const iconFor = (kind: string) =>
@@ -371,6 +463,7 @@ export function buildDocModel(it: Itinerary): DocModel {
     hotels,
     activities,
     days,
+    visa: buildVisaView(it.visa, trip.currency),
     pricing,
     currency: trip.currency,
     inclusions: content.inclusions,

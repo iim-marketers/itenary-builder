@@ -1419,6 +1419,141 @@ export function ItineraryPdf({ doc }: { doc: DocModel }) {
         </Page>
       ) : null}
 
+      {/* ---------------------------------------------------------- visa */}
+      {doc.visa ? (
+        <Page size="A4" style={s.page}>
+          <Furniture doc={doc} st={st} />
+          <SectionHead num={sec("Visa")} title="Visa & travel documents" st={st} />
+
+          <View style={[s.card, s.cardAccent]} wrap={false}>
+            <View style={{ flexDirection: "row" }}>
+              <Text style={s.pill}>{doc.visa.requirement}</Text>
+            </View>
+            <Text style={[s.lead, { marginTop: SP.sm }]}>{doc.visa.blurb}</Text>
+            {doc.visa.facts.length ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  rowGap: SP.md,
+                  marginTop: SP.lg,
+                }}
+              >
+                {doc.visa.facts.map((f) => (
+                  <View key={f.label} style={{ width: "33.33%", paddingRight: SP.md }}>
+                    <KV label={f.label} value={f.value} st={st} />
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+
+          {doc.visa.documents.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              <View style={[s.between, { alignItems: "baseline" }]}>
+                <Text style={s.blockLabel} minPresenceAhead={48}>Documents we need from you</Text>
+                {doc.visa.dueBy ? (
+                  <Text style={{ fontSize: 8.5, color: MUTED, lineHeight: LH.label }}>
+                    Please send by{" "}
+                    <Text style={{ fontWeight: 600, color: INK }}>{doc.visa.dueBy}</Text>
+                  </Text>
+                ) : null}
+              </View>
+              <View style={s.list}>
+                {doc.visa.documents.map((d) => (
+                  <View key={d.id} style={s.li} wrap={false}>
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        marginTop: 2.5,
+                        marginRight: 8,
+                        borderWidth: 1,
+                        borderColor: st.brand,
+                        borderRadius: 1.5,
+                      }}
+                    />
+                    <Text style={s.liText}>
+                      {d.label}
+                      {d.mandatory ? null : (
+                        <Text style={{ fontSize: 6.5, color: FAINT, fontWeight: 600, letterSpacing: 0.8 }}>
+                          {"   OPTIONAL"}
+                        </Text>
+                      )}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {doc.visa.submission || doc.visa.photoSpecs ? (
+            <View style={[s.row, { gap: SP.md, marginTop: SP.lg }]} wrap={false}>
+              {[
+                { label: "How to send them", text: doc.visa.submission },
+                { label: "Photograph specifications", text: doc.visa.photoSpecs },
+              ]
+                .filter((b) => b.text)
+                .map((b) => (
+                  <View
+                    key={b.label}
+                    style={[s.card, { flex: 1, backgroundColor: st.softer, borderWidth: 0 }]}
+                  >
+                    <Text style={s.eyebrow}>{b.label}</Text>
+                    <Text
+                      style={{ fontSize: 8.5, color: MUTED, lineHeight: LH.body, marginTop: SP.xs }}
+                    >
+                      {b.text}
+                    </Text>
+                  </View>
+                ))}
+            </View>
+          ) : null}
+
+          {doc.visa.applicants.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              <View wrap={false} minPresenceAhead={30}>
+                <Text style={s.blockLabel}>Applicants</Text>
+                <View style={s.thead}>
+                  <Text style={[s.th, { flex: 3 }]}>Name</Text>
+                  <Text style={[s.th, { flex: 2 }]}>Nationality</Text>
+                  <Text style={[s.th, { flex: 2 }]}>Passport</Text>
+                  <Text style={[s.th, { flex: 2 }]}>Expiry</Text>
+                  <Text style={[s.th, { flex: 2.2, textAlign: "right" }]}>Status</Text>
+                </View>
+              </View>
+              {doc.visa.applicants.map((a) => (
+                <View key={a.id} style={s.tr} wrap={false}>
+                  <Text style={{ flex: 3, fontSize: 9, fontWeight: 600 }}>{a.name}</Text>
+                  <Text style={{ flex: 2, fontSize: 8.5, color: MUTED }}>{a.nationality}</Text>
+                  <Text style={{ flex: 2, fontSize: 8.5, color: MUTED }}>{a.passport}</Text>
+                  <Text style={{ flex: 2, fontSize: 8.5, color: MUTED }}>{a.expiry}</Text>
+                  <Text style={{ flex: 2.2, fontSize: 8.5, textAlign: "right" }}>
+                    {a.status}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {doc.visa.notes.length ? (
+            <View style={{ marginTop: SP.xl }}>
+              {/* The label travels with the first note so it is never stranded
+                  at the foot of a page. */}
+              <View wrap={false}>
+                <Text style={s.blockLabel}>Please note</Text>
+                <Bullets items={doc.visa.notes.slice(0, 1)} st={st} />
+              </View>
+              {doc.visa.notes.length > 1 ? (
+                <View style={{ marginTop: SP.sm }}>
+                  <Bullets items={doc.visa.notes.slice(1)} st={st} />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </Page>
+      ) : null}
+
       {/* ------------------------------------------------------- pricing */}
       <Page size="A4" style={s.page}>
         <Furniture doc={doc} st={st} />
